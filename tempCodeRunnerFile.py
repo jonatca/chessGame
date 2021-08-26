@@ -1,0 +1,2 @@
+
+    current_player = "white"

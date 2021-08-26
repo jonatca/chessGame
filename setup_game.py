@@ -3,6 +3,7 @@ from os import *
 from graphics import *
 from time import sleep
 from utils import *
+from button import *
 
 
 class Setup_game:
@@ -11,10 +12,129 @@ class Setup_game:
         self.white = white
         self.sqsize = size
         self.pic_dir = "pieces"
+        self.num_squares = 8
+        self.extra_side_space = 4
+        self.button_size = (self.sqsize * 2.4, self.sqsize / 2)  # width,hieght
         self.win = GraphWin(
-            "Schackbrädet", 8 * self.sqsize + self.sqsize * 2, 8 * self.sqsize
+            "Schackbrädet",
+            self.num_squares * self.sqsize + self.sqsize * self.extra_side_space,
+            self.num_squares * self.sqsize,
         )
         self.pieces_info = pieces()
+        self.possible_moves = []
+        self.black_kingside_rochade_button_on = True
+        self.white_kingside_rochade_button_on = True
+
+    def turn_on_buttons(self):
+        bol = self._turn_on_buttons(
+            self.black_kingside_rochade_button_on,
+            self.black_kingside_rochade_button,
+            "black",
+            self.can_do_kingside_rochade,
+        )
+        self.black_kingside_rochade_button_on = bol
+        # if not self.black_kingside_rochade_button_on:
+        #     if self.can_do_kingside_rochade("black"):
+        #         self.black_kingside_rochade_button.activate()
+        #         self.black_kingside_rochade_button_on = True
+
+        # if not self.white_kingside_rochade_button_on:
+        #     if self.can_do_kingside_rochade("white"):
+        #         self.white_kingside_rochade_button.activate()
+        #         self.white_kingside_rochade_button_on = True
+
+    def _turn_on_buttons(
+        self, button_on: bool, button: object, player: str, fun
+    ):  # function could be can_do_kingsdie_rochade
+        if not button_on:
+            if fun(player):
+                button.activate()
+                return True
+        return False
+
+    def turn_off_buttons(self):
+        if self.black_kingside_rochade_button_on:
+            if not self.can_do_kingside_rochade("black"):
+                self.black_kingside_rochade_button.deactivate()
+                self.black_kingside_rochade_button_on = False
+
+        # if self.white_kingside_rochade_button_on:
+        #     if not self.can_do_kingside_rochade("white"):
+        #         self.white_kingside_rochade_button.deactivate()
+        #         self.white_kingside_rochade_button_on = False
+
+    def check_which_button_clicked(
+        self, x: float, y: float, current_player: str
+    ) -> str:
+        if current_player == "black":
+            if self.black_kingside_rochade_button_on:
+                min_x, min_y, max_x, max_y = self.get_boundaries(
+                    self.black_kingside_rochade_button_center
+                )
+                if self.is_inside(x, y, min_x, min_y, max_x, max_y):
+                    print("gör rokad")
+                    self.do_kingside_rochade(current_player)
+
+    def get_boundaries(self, button_center: tuple) -> list:
+        min_x = button_center[0] - self.button_size[0] / 2
+        min_y = button_center[1] - self.button_size[1] / 2
+        max_x = button_center[0] + self.button_size[0] / 2
+        max_y = button_center[1] + self.button_size[1] / 2
+        return [min_x, min_y, max_x, max_y]
+
+    def is_inside(self, x, y, min_x, min_y, max_x, max_y) -> bool:
+        if x >= min_x:
+            if x <= max_x:
+                if y >= min_y:
+                    if y <= max_y:
+                        return True
+        return False
+
+    def setup_buttons(self):
+        self.set_button_centers()
+        self.setup_kingside_rochade_button()
+
+    def set_button_centers(self):
+        self.black_kingside_rochade_button_center = (
+            self.sqsize * (self.num_squares + self.extra_side_space / 2),
+            (self.sqsize * (self.num_squares * 12 / 16)),
+        )
+
+    def setup_kingside_rochade_button(self):
+        self.black_kingside_rochade_button = Button(
+            self.win,
+            Point(
+                self.black_kingside_rochade_button_center[0],
+                self.black_kingside_rochade_button_center[1],
+            ),
+            self.button_size[0],
+            self.button_size[1],
+            "Gör rokad på kungsidan",
+        )
+        self.black_kingside_rochade_button.activate()
+
+    def can_do_kingside_rochade(self, player: str) -> bool:
+        torn_moved = self.pieces_info["torn"][player][1]["moved"]
+        kung_moved = self.pieces_info["kung"][player][1]["moved"]
+
+        if not torn_moved:
+            if not kung_moved:
+                i = 1
+                j = 2
+                if player == "black":
+                    i = 8
+                if not bol_exist_piece_here(self, player, i, j):
+                    if not bol_exist_piece_here(self, player, i, j + 1):
+                        return True
+        return False
+
+    def do_kingside_rochade(self, player: str):
+        i = 1
+        if player == "black":
+            i = 8
+
+        self.move_piece("torn", player, 1, i, 3)
+        self.move_piece("kung", player, 1, i, 2)
 
     def check(self, current_player: str) -> bool:
         other_player = self.get_other_player(current_player)
@@ -28,13 +148,47 @@ class Setup_game:
                     return True
         return False
 
+    def has_possible_moves(self, player: str) -> bool:
+        for piece in self.pieces_info:
+            for piece_index in self.pieces_info[piece][player]:
+
+                possible_moves = self.check_possibilities(
+                    piece, piece_index, player, False
+                )
+                print("possible_moves", possible_moves)
+                possible_moves = self.potential_movement_check(
+                    piece, piece_index, player, possible_moves
+                )
+                print("possible_moves removed some", possible_moves)
+                if possible_moves != []:
+                    return True
+        print("has_possible_moves = False")
+        return False
+
+    def check_mate(self, other_player: str) -> bool:
+        if self.check(other_player):
+            if not self.has_possible_moves(other_player):
+                return True
+        return False
+
+    def equal(self, other_player: str):
+        if not self.has_possible_moves(other_player):
+            return True
+
+        # checks if only kings are left -> return True
+        # for piece in self.pieces_info:
+        #     for piece_index in self.pieces_info[piece]
+        #     if piece != "kung":
+        #         return False
+        return False
+
     def check_possibilities(
         self,
         piece: str,
         piece_index: int,
         current_player: str,
         only_attack: bool,
-    ):
+    ) -> list:
         i, j = self.pieces_info[piece][current_player][piece_index]["pos"]
         possible_moves = []
         rules = self.pieces_info[piece]["rules"]
@@ -93,11 +247,11 @@ class Setup_game:
             [object, remove_piece, remove_piece_index] = self.remove_piece(
                 other_player, i, j, False
             )
-            if piece != "kung":
-                if self.check(current_player):
-                    new_possible_moves.pop(m)
-                    m -= 1
-                    print("tar bort ett alternativ pga det ställer dig i schack")
+            # if piece != "kung":  # ta bort denna
+            if self.check(current_player):
+                new_possible_moves.pop(m)
+                m -= 1
+                print("tar bort ett alternativ pga det ställer dig i schack")
 
             # restore piece
             if object != None:
@@ -171,8 +325,7 @@ class Setup_game:
         i_px = int(convert_to_px(delta_i, self.sqsize) + self.sqsize / 2)
         j_px = int(convert_to_px(delta_j, self.sqsize) + self.sqsize / 2)
         graphic_piece.move(i_px, j_px)
-        if piece == "bonde":
-            self.pieces_info[piece][current_player][piece_index]["moved"] = True
+        self.pieces_info[piece][current_player][piece_index]["moved"] = True
 
     def draw_possible_moves(self, possible_moves: list):
         list_circles = []
@@ -228,5 +381,6 @@ class Setup_game:
             x, y = str(mouse)[6:-1].split(",")
             x = float(x)
             y = float(y)
+            return x, y
             i, j = convert_to_i_j(x, y, self.sqsize)
             return i, j

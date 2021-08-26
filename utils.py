@@ -1,18 +1,18 @@
 from graphics import *
 
 
-def convert_to_px(i: int, sqsize: int) -> int:  # ok
+def convert_to_px(i: int, sqsize: int) -> int:
     return i * sqsize - sqsize / 2
 
 
-def convert_to_i_j(x: float, y: float, sqsize: int):  # ok
-    j = int(y / sqsize) + 1
-    i = int(x / sqsize) + 1
+def convert_to_i_j(chessboard, x: float, y: float) -> int:
+    j = int(y / chessboard.sqsize) + 1
+    i = int(x / chessboard.sqsize) + 1
     return i, j
 
 
 def pieces():
-    torn_movement = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+    torn_movement = [(1, 0), (-1, 0), (0, 1), (0, -1)]  # (i,j), i=x=right
     lopare_movement = [(1, 1), (-1, -1), (1, -1), (-1, 1)]
 
     pieces_info = {
@@ -22,7 +22,7 @@ def pieces():
                 2: {"pos": (2, 2), "moved": False},
                 3: {"pos": (2, 3), "moved": False},
                 4: {"pos": (2, 4), "moved": False},
-                5: {"pos": (2, 5), "moved": False},
+                5: {"pos": (3, 5), "moved": False},
                 6: {"pos": (2, 6), "moved": False},
                 7: {"pos": (2, 7), "moved": False},
                 8: {"pos": (2, 8), "moved": False},
@@ -40,20 +40,32 @@ def pieces():
             "rules": {
                 "standard_move": [(1, 0)],  # i,j
                 "attack_move": [(1, 1), (1, -1)],
-                "rekursive": 2,  # change this to 1 when moved == True
+                "rekursive": 2,  # change this to 1 if moved == True
             },
         },
         "torn": {
-            "white": {1: {"pos": (1, 1)}, 2: {"pos": (1, 8)}},
-            "black": {1: {"pos": (8, 1)}, 2: {"pos": (8, 8)}},
+            "white": {
+                1: {"pos": (1, 1), "moved": False},
+                2: {"pos": (1, 8), "moved": False},
+            },
+            "black": {
+                1: {"pos": (8, 1), "moved": False},
+                2: {"pos": (8, 8), "moved": False},
+            },
             "rules": {
-                "standard_move": torn_movement,  # i,j
+                "standard_move": torn_movement,
                 "rekursive": 8,
             },
         },
         "hast": {
-            "white": {1: {"pos": (1, 2)}, 2: {"pos": (1, 7)}},
-            "black": {1: {"pos": (8, 2)}, 2: {"pos": (8, 7)}},
+            "white": {
+                1: {"pos": (1, 2), "moved": False},
+                2: {"pos": (1, 7), "moved": False},
+            },
+            "black": {
+                1: {"pos": (8, 2), "moved": False},
+                2: {"pos": (8, 7), "moved": False},
+            },
             "rules": {
                 "standard_move": [
                     (2, 1),
@@ -69,26 +81,32 @@ def pieces():
             },
         },
         "lopare": {
-            "white": {1: {"pos": (1, 3)}, 2: {"pos": (1, 6)}},
-            "black": {1: {"pos": (8, 3)}, 2: {"pos": (8, 6)}},
+            "white": {
+                1: {"pos": (1, 3), "moved": False},
+                2: {"pos": (4, 3), "moved": False},
+            },
+            "black": {
+                1: {"pos": (8, 3), "moved": False},
+                2: {"pos": (8, 6), "moved": False},
+            },
             "rules": {
-                "standard_move": lopare_movement,  # i,j
+                "standard_move": lopare_movement,
                 "rekursive": 8,
             },
         },
         "kung": {
-            "white": {1: {"pos": (1, 5)}},
-            "black": {1: {"pos": (8, 5)}},
+            "white": {1: {"pos": (1, 4), "moved": False}},
+            "black": {1: {"pos": (8, 4), "moved": False}},
             "rules": {
-                "standard_move": lopare_movement + torn_movement,  # i,j
+                "standard_move": lopare_movement + torn_movement,
                 "rekursive": 1,
             },
         },
         "dam": {
-            "white": {1: {"pos": (1, 4)}},
-            "black": {1: {"pos": (8, 4)}},
+            "white": {1: {"pos": (1, 5), "moved": False}},
+            "black": {1: {"pos": (8, 5), "moved": False}},
             "rules": {
-                "standard_move": lopare_movement + torn_movement,  # i,j
+                "standard_move": lopare_movement + torn_movement,
                 "rekursive": 8,
             },
         },
@@ -108,16 +126,23 @@ def bonde_attack(Setup_game, other_player: str, i: int, j: int, dir: int) -> lis
     return possible_moves
 
 
-def outside_board(i, j):
+def outside_board(i: int, j: int):
     return i < 1 or i > 8 or j < 1 or j > 8
 
 
-def king_is_check(Setup_game, piece, piece_index, current_player, i_king, j_king):
-    possible_moves = Setup_game.check_possibilities(
+def king_is_check(
+    Setup_game,
+    piece: str,
+    piece_index: int,
+    current_player: str,
+    i_king: int,
+    j_king: int,
+):
+    Setup_game.possible_moves = Setup_game.check_possibilities(
         piece, piece_index, current_player, True
     )
-    #lägg till functionen potential_movement_check
-    for i, j in possible_moves:
+    # lägg till functionen potential_movement_check
+    for i, j in Setup_game.possible_moves:
         if i_king == i:
             if j_king == j:
                 return True
@@ -132,7 +157,13 @@ def bol_exist_piece_here(Setup_game, check_player: str, i: int, j: int):
 
 
 def check_one_posibility(
-    Setup_game, piece, current_player, piece_index, temp_i, temp_j, other_player
+    Setup_game,
+    piece: str,
+    current_player: str,
+    piece_index: int,
+    temp_i: int,
+    temp_j: int,
+    other_player: str,
 ):
     temp_move = (temp_i, temp_j)
     if outside_board(temp_i, temp_j):
