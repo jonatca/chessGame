@@ -14,22 +14,24 @@ class Setup_game:
         self.sqsize = size
         self.pic_dir = "pieces"
         self.num_squares = 8
-        self.extra_side_space = 4
+        self.extra_side_space = 3.859
         self.button_size = (self.sqsize * 2.4, self.sqsize / 2)  # width,hieght
         self.win = GraphWin(
             "Schackbrädet",
-            self.num_squares * self.sqsize + self.sqsize * self.extra_side_space,
+            self.num_squares * self.sqsize + self.sqsize * self.extra_side_space * 2,
             self.num_squares * self.sqsize,
         )
+        self.win.setBackground("lightblue")
         self.pieces_info = pieces()
         self.possible_moves = []
         self.black_kingside_button_on = True
         self.white_kingside_button_on = True
         self.black_queenside_button_on = True
         self.white_queenside_button_on = True
-        self.start_button_on = True
-        self.stop_button_on = True
+        self.start_button_on = False
+        self.pause_button_on = True
         self.time_is_up = False
+        self.settings_button_clicked = False
 
     def queening_the_pawn(self, current_player: str, piece_index: int, i: int, j: int):
         i_goal = 8
@@ -48,6 +50,12 @@ class Setup_game:
     def get_time_is_up(self):
         return self.time_is_up
 
+    def get_start_button_on(self):
+        return self.start_button_on
+
+    def get_pause_button_on(self):
+        return self.pause_button_on
+
     def turn_on_buttons(self):
         [
             button_on,
@@ -62,10 +70,15 @@ class Setup_game:
         for m in range(len(button)):
             bol_temp = True
             if not button_on[m]:
+                if side_fun_can_do[m] == None:
+                    bol_temp = False
                 if side_fun_can_do[m](player[m], side[m]):
                     button[m].activate()
                 else:
                     bol_temp = False
+            elif side_fun_can_do[m] == None:
+                button[m].activate()
+
             bol.append(bol_temp)
         self.set_button_bol(bol)
 
@@ -83,10 +96,16 @@ class Setup_game:
         for m in range(len(button)):
             bol_temp = False
             if button_on[m]:
-                if not side_fun_can_do[m](player[m], side[m]):
-                    button[m].deactivate()
-                else:
+                if side_fun_can_do[m] == None:
                     bol_temp = True
+                else:
+                    if not side_fun_can_do[m](player[m], side[m]):
+                        button[m].deactivate()
+                    else:
+                        bol_temp = True
+            elif side_fun_can_do[m] == None:
+                button[m].deactivate()
+
             bol.append(bol_temp)
 
         self.set_button_bol(bol)
@@ -97,7 +116,29 @@ class Setup_game:
             self.white_kingside_button_on,
             self.black_queenside_button_on,
             self.white_queenside_button_on,
+            self.start_button_on,
+            self.pause_button_on,
         ] = bol
+
+    def start_game(self, _, not_used):
+        print("starts game")
+        self.settings_button_clicked = True
+        self.pause_button_on = True
+        self.start_button_on = False
+        self.pause_button.activate()
+        self.start_button.deactivate()
+
+    def pause_game(self, _, not_used):
+        self.start_button.activate()
+        self.pause_button.deactivate()
+        print("pauses game")
+        self.settings_button_clicked = True
+        self.pause_button_on = False
+        self.start_button_on = True
+        x, y = self.get_mouse_position()
+        while self.check_which_button_clicked(x, y)[1] != "start":
+            x, y = self.get_mouse_position()
+            print("pausing")
 
     def _get_button_info(self):
         button_on = [
@@ -105,33 +146,43 @@ class Setup_game:
             self.white_kingside_button_on,
             self.black_queenside_button_on,
             self.white_queenside_button_on,
+            self.start_button_on,
+            self.pause_button_on,
         ]
-        player = ["black", "white", "black", "white"]
+        player = ["black", "white", "black", "white", "start", "pause"]
         button_center = [
             self.black_kingside_button_center,
             self.white_kingside_button_center,
             self.black_queenside_button_center,
             self.white_queenside_button_center,
+            self.start_button_center,
+            self.pause_button_center,
         ]
         side_fun_do = [
             self.do_rochade,
             self.do_rochade,
             self.do_rochade,
             self.do_rochade,
+            self.start_game,
+            self.pause_game,
         ]
         button = [
             self.black_kingside_button,
             self.white_kingside_button,
             self.black_queenside_button,
             self.white_queenside_button,
+            self.start_button,
+            self.pause_button,
         ]
         side_fun_can_do = [
             self.can_do_rochade,
             self.can_do_rochade,
             self.can_do_rochade,
             self.can_do_rochade,
+            None,
+            None,
         ]
-        side = ["kung", "kung", "dam", "dam"]
+        side = ["kung", "kung", "dam", "dam", None, None]
         return [
             button_on,
             player,
@@ -143,7 +194,7 @@ class Setup_game:
         ]
 
     def check_which_button_clicked(
-        self, x: float, y: float, current_player: str
+        self, x: float, y: float, current_player: str = None
     ) -> bool:
         [
             button_on,
@@ -156,14 +207,15 @@ class Setup_game:
         ] = self._get_button_info()
         bol = []
         for m in range(len(button_on)):
-            if current_player == player[m]:
+            if current_player == player[m] or player[m] in ["start", "pause"]:
                 if button_on[m]:
                     min_x, min_y, max_x, max_y = self.get_boundaries(button_center[m])
                     if self.is_inside(x, y, min_x, min_y, max_x, max_y):
                         side_fun_do[m](current_player, side[m])
-                        return True
 
-        return False
+                        return True, player[m]
+
+        return False, False
 
     def get_boundaries(self, button_center: tuple) -> list:
         min_x = button_center[0] - self.button_size[0] / 2
@@ -185,21 +237,30 @@ class Setup_game:
         self.setup_rochade_buttons()
 
     def set_button_centers(self):
+
         self.black_kingside_button_center = (
-            self.sqsize * (self.num_squares + self.extra_side_space / 2),
-            (self.sqsize * (self.num_squares * 14 / 16)),
+            self.sqsize * (self.num_squares + self.extra_side_space * 3 / 2),
+            (self.sqsize * (self.num_squares * 4 / 16)),
         )
         self.white_kingside_button_center = (
-            self.sqsize * (self.num_squares + self.extra_side_space / 2),
+            self.sqsize * (self.extra_side_space / 2),
             (self.sqsize * (self.num_squares * 4 / 16)),
         )
         self.black_queenside_button_center = (
-            self.sqsize * (self.num_squares + self.extra_side_space / 2),
-            (self.sqsize * (self.num_squares * 12 / 16)),
+            self.sqsize * (self.num_squares + self.extra_side_space * 3 / 2),
+            (self.sqsize * (self.num_squares * 6 / 16)),
         )
         self.white_queenside_button_center = (
-            self.sqsize * (self.num_squares + self.extra_side_space / 2),
+            self.sqsize * (self.extra_side_space / 2),
             (self.sqsize * (self.num_squares * 6 / 16)),
+        )
+        self.start_button_center = (
+            self.sqsize * (self.extra_side_space / 2),
+            (self.sqsize * (self.num_squares * 8 / 16)),
+        )
+        self.pause_button_center = (
+            self.sqsize * (self.extra_side_space / 2),
+            (self.sqsize * (self.num_squares * 10 / 16)),
         )
 
     def setup_rochade_buttons(self):
@@ -208,12 +269,16 @@ class Setup_game:
             self.white_kingside_button_center,
             self.black_queenside_button_center,
             self.white_queenside_button_center,
+            self.start_button_center,
+            self.pause_button_center,
         ]
         message = [
             "rokad kungsidan",
             "rokad kungsidan",
             "rokad damsidan",
             "rokad damsidan",
+            "Start",
+            "Paus",
         ]
         button_name = []
         for m in range(len(button_center)):
@@ -235,6 +300,8 @@ class Setup_game:
             self.white_kingside_button,
             self.black_queenside_button,
             self.white_queenside_button,
+            self.start_button,
+            self.pause_button,
         ] = button_name
 
     def can_do_rochade(self, player: str, side) -> bool:
@@ -246,16 +313,16 @@ class Setup_game:
         if side == "dam":
             j_list = [5, 6, 7]
             torn_index = 2
+        if torn_index in self.pieces_info["torn"][player]:
+            torn_moved = self.pieces_info["torn"][player][torn_index]["moved"]
+            kung_moved = self.pieces_info["kung"][player][1]["moved"]
 
-        torn_moved = self.pieces_info["torn"][player][torn_index]["moved"]
-        kung_moved = self.pieces_info["kung"][player][1]["moved"]
-
-        if not torn_moved:
-            if not kung_moved:
-                for temp_j in j_list:
-                    if bol_exist_piece_here(self, player, i, temp_j):
-                        return False
-                return True
+            if not torn_moved:
+                if not kung_moved:
+                    for temp_j in j_list:
+                        if bol_exist_piece_here(self, player, i, temp_j):
+                            return False
+                    return True
         return False
 
     def do_rochade(self, player: str, side: str):
@@ -462,7 +529,7 @@ class Setup_game:
         list_circles = []
         radius = self.sqsize / 8
         for i, j in possible_moves:
-            x = convert_to_px(i, self.sqsize)
+            x = convert_to_px(i + self.extra_side_space, self.sqsize)
             y = convert_to_px(j, self.sqsize)
             circle = Circle(Point(x, y), radius)
             circle.setFill("blue")
@@ -474,8 +541,11 @@ class Setup_game:
         for x in range(8):
             for y in range(8):
                 square = Rectangle(
-                    Point(x * self.sqsize, y * self.sqsize),
-                    Point(x * self.sqsize + self.sqsize, y * self.sqsize + self.sqsize),
+                    Point((x + self.extra_side_space) * self.sqsize, y * self.sqsize),
+                    Point(
+                        (x + self.extra_side_space) * self.sqsize + self.sqsize,
+                        y * self.sqsize + self.sqsize,
+                    ),
                 )
                 if (x % 2 == 0 and y % 2 == 0) or (x % 2 > 0 and y % 2 > 0):
                     square.setFill(self.white)
@@ -495,7 +565,7 @@ class Setup_game:
     def _draw_piece(
         self, img: str, i: int, j: int, piece: str, color: str, piece_index: int
     ):
-        ipx = convert_to_px(i, self.sqsize)
+        ipx = convert_to_px(i + self.extra_side_space, self.sqsize)
         jpx = convert_to_px(j, self.sqsize)
         myImage = Image(Point(ipx, jpx), self.pic_dir + "/" + img)
         myImage.draw(self.win)
@@ -506,8 +576,8 @@ class Setup_game:
             return "white"
         return "black"
 
-    def get_mouse_position(self, pc, tot_elapsed_time, current_player, chessboard):
-        mouse = self.win.getMouse(pc, tot_elapsed_time, current_player, chessboard)
+    def get_mouse_position(self, pc=None, tot_elapsed_time=None, current_player=None):
+        mouse = self.win.getMouse(pc, tot_elapsed_time, current_player, self)
         x, y = str(mouse)[6:-1].split(",")
         x = float(x)
         y = float(y)
@@ -524,11 +594,9 @@ class Setup_game:
 
     def output_time_left(self, stop, tot_elapsed_time, index, current_player):
         elapsed_time = stop - tot_elapsed_time[index]  # remove other players time
-        print("elapsed_time", elapsed_time)
 
         if index == 1:
             tot_elapsed_time = calc_time_past(0, elapsed_time, tot_elapsed_time)
-            print("tot_elapsed_time", tot_elapsed_time)
             time_left = self.white_start_time - tot_elapsed_time[0]
         if index == 0:
             tot_elapsed_time = calc_time_past(1, elapsed_time, tot_elapsed_time)
@@ -546,25 +614,42 @@ class Setup_game:
             index = 3
 
         self.time_text[index].setText(time_formatted)
-        print(time_formatted)
 
-    def setup_text(self):
+    def setup_text(self, white, black):
         self.time_text = []
-        j = [1, 9, 2, 10]
+        j = [1, 1, 2, 2]
+        i = [
+            self.extra_side_space / 2,
+            self.num_squares + self.extra_side_space * 3 / 2,
+            self.extra_side_space / 2,
+            self.num_squares + self.extra_side_space * 3 / 2,
+        ]
 
         output_message = [
-            "White",
-            "Black",
+            white,
+            black,
             get_time_formated(self.white_start_time),
             get_time_formated(self.black_start_time),
         ]
         for m in range(len(j)):
             time_text = Text(
                 Point(
-                    self.sqsize * (self.num_squares + self.extra_side_space / 2),
+                    self.sqsize * i[m],
                     (self.sqsize * (self.num_squares * j[m] / 16)),
                 ),
                 output_message[m],
             )  # eftersom jag printar nedifrån vänster och upp
             time_text.draw(self.win)
             self.time_text.append(time_text)
+
+    def set_winners_text(self, output_message: str):
+        time_text = Text(
+            Point(
+                self.sqsize * self.num_squares / 2,
+                self.sqsize * (self.num_squares * 7 / 16),
+            ),
+            output_message,
+        )  # eftersom jag printar nedifrån vänster och upp
+        time_text.setSize(35)
+        time_text.setTextColor("blue")
+        time_text.draw(self.win)

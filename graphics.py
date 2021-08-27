@@ -308,7 +308,7 @@ class GraphWin(tk.Canvas):
         self.__checkOpen()
         self.update_idletasks()
 
-    def getMouse(self, pc, tot_elapsed_time, current_player, chessboard):
+    def getMouse(self, pc=None, tot_elapsed_time=None, current_player=None, chessboard=None):
         """Wait for mouse click and return Point object representing
         the click"""
         index = 1
@@ -318,9 +318,11 @@ class GraphWin(tk.Canvas):
         self.mouseX = None
         self.mouseY = None
         while self.mouseX == None or self.mouseY == None:
-            stop = pc()
-            chessboard.output_time_left(stop, tot_elapsed_time, index, current_player)
-
+            if pc != None:
+                stop = pc()
+                chessboard.output_time_left(
+                    stop, tot_elapsed_time, index, current_player
+                )
             self.update()
             if self.isClosed():
                 raise GraphicsError("getMouse in closed window")
@@ -976,46 +978,46 @@ def color_rgb(r, g, b):
 
 def test():
     win = GraphWin()
-    win.setCoords(0, 0, 10, 10)
-    t = Text(Point(5, 5), "Centered Text")
-    t.draw(win)
-    p = Polygon(Point(1, 1), Point(5, 3), Point(2, 7))
-    p.draw(win)
-    e = Entry(Point(5, 6), 10)
-    e.draw(win)
-    win.getMouse()
-    p.setFill("red")
-    p.setOutline("blue")
-    p.setWidth(2)
-    s = ""
-    for pt in p.getPoints():
-        s = s + "(%0.1f,%0.1f) " % (pt.getX(), pt.getY())
-    t.setText(e.getText())
-    e.setFill("green")
-    e.setText("Spam!")
-    e.move(2, 0)
-    win.getMouse()
-    p.move(2, 3)
-    s = ""
-    for pt in p.getPoints():
-        s = s + "(%0.1f,%0.1f) " % (pt.getX(), pt.getY())
-    t.setText(s)
-    win.getMouse()
-    p.undraw()
-    e.undraw()
-    t.setStyle("bold")
-    win.getMouse()
-    t.setStyle("normal")
-    win.getMouse()
-    t.setStyle("italic")
-    win.getMouse()
-    t.setStyle("bold italic")
-    win.getMouse()
-    t.setSize(14)
-    win.getMouse()
-    t.setFace("arial")
-    t.setSize(20)
-    win.getMouse()
+    # win.setCoords(0, 0, 10, 10)
+    # t = Text(Point(5, 5), "Centered Text")
+    # t.draw(win)
+    # p = Polygon(Point(1, 1), Point(5, 3), Point(2, 7))
+    # p.draw(win)
+    # e = Entry(Point(5, 6), 10)
+    # e.draw(win)
+    # win.getMouse()
+    # p.setFill("red")
+    # p.setOutline("blue")
+    # p.setWidth(2)
+    # s = ""
+    # for pt in p.getPoints():
+    #     s = s + "(%0.1f,%0.1f) " % (pt.getX(), pt.getY())
+    # t.setText(e.getText())
+    # e.setFill("green")
+    # e.setText("Spam!")
+    # e.move(2, 0)
+    # win.getMouse()
+    # p.move(2, 3)
+    # s = ""
+    # for pt in p.getPoints():
+    #     s = s + "(%0.1f,%0.1f) " % (pt.getX(), pt.getY())
+    # t.setText(s)
+    # win.getMouse()
+    # p.undraw()
+    # e.undraw()
+    # t.setStyle("bold")
+    # win.getMouse()
+    # t.setStyle("normal")
+    # win.getMouse()
+    # t.setStyle("italic")
+    # win.getMouse()
+    # t.setStyle("bold italic")
+    # win.getMouse()
+    # t.setSize(14)
+    # win.getMouse()
+    # t.setFace("arial")
+    # t.setSize(20)
+    # win.getMouse()
     win.close()
 
 
