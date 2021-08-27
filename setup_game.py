@@ -1,5 +1,6 @@
 from genericpath import exists
 from os import *
+from tkinter import image_names
 from graphics import *
 from time import sleep
 from utils import *
@@ -26,6 +27,20 @@ class Setup_game:
         self.white_kingside_button_on = True
         self.black_queenside_button_on = True
         self.white_queenside_button_on = True
+
+    def queening_the_pawn(self, current_player: str, piece_index: int, i: int, j: int):
+        i_goal = 8
+        if current_player == "black":
+            i_goal = 1
+        if i == i_goal:
+            self.remove_piece(current_player, i, j, True)
+            img_name = current_player + "_dam.png"
+            new_piece_index = len(self.pieces_info["dam"][current_player]) + 1
+            self.pieces_info["dam"][current_player][new_piece_index] = {
+                "pos": (i, j),
+                "moved": True,
+            }
+            self._draw_piece(img_name, i, j, "dam", current_player, new_piece_index)
 
     def turn_on_buttons(self):
         [
@@ -139,7 +154,6 @@ class Setup_game:
                 if button_on[m]:
                     min_x, min_y, max_x, max_y = self.get_boundaries(button_center[m])
                     if self.is_inside(x, y, min_x, min_y, max_x, max_y):
-                        print("gör rokad")
                         side_fun_do[m](current_player, side[m])
                         return True
 
@@ -167,7 +181,7 @@ class Setup_game:
     def set_button_centers(self):
         self.black_kingside_button_center = (
             self.sqsize * (self.num_squares + self.extra_side_space / 2),
-            (self.sqsize * (self.num_squares * 12 / 16)),
+            (self.sqsize * (self.num_squares * 14 / 16)),
         )
         self.white_kingside_button_center = (
             self.sqsize * (self.num_squares + self.extra_side_space / 2),
@@ -175,7 +189,7 @@ class Setup_game:
         )
         self.black_queenside_button_center = (
             self.sqsize * (self.num_squares + self.extra_side_space / 2),
-            (self.sqsize * (self.num_squares * 10 / 16)),
+            (self.sqsize * (self.num_squares * 12 / 16)),
         )
         self.white_queenside_button_center = (
             self.sqsize * (self.num_squares + self.extra_side_space / 2),
@@ -270,14 +284,11 @@ class Setup_game:
                 possible_moves = self.check_possibilities(
                     piece, piece_index, player, False
                 )
-                print("possible_moves", possible_moves)
                 possible_moves = self.potential_movement_check(
                     piece, piece_index, player, possible_moves
                 )
-                print("possible_moves removed some", possible_moves)
                 if possible_moves != []:
                     return True
-        print("has_possible_moves = False")
         return False
 
     def check_mate(self, other_player: str) -> bool:
@@ -366,7 +377,6 @@ class Setup_game:
             if self.check(current_player):
                 new_possible_moves.pop(m)
                 m -= 1
-                print("tar bort ett alternativ pga det ställer dig i schack")
 
             # restore piece
             if object != None:
@@ -468,34 +478,84 @@ class Setup_game:
                 square.draw(self.win)
 
     def draw_pieces(self):
-        for piece in listdir(self.pic_dir):
-            color, name = piece.split("_")
-            name = name[:-4]
-            piece_dict = self.pieces_info[name][color]
+        for img_name in listdir(self.pic_dir):
+            color, piece = img_name.split("_")
+            piece = piece[:-4]
+            piece_dict = self.pieces_info[piece][color]
             for piece_index in piece_dict:
                 i, j = piece_dict[piece_index]["pos"]
-                self._draw_piece(piece, i, j, name, color, piece_index)
+                self._draw_piece(img_name, i, j, piece, color, piece_index)
 
     def _draw_piece(
-        self, img: str, i: int, j: int, name: str, color: str, piece_index: int
+        self, img: str, i: int, j: int, piece: str, color: str, piece_index: int
     ):
         ipx = convert_to_px(i, self.sqsize)
         jpx = convert_to_px(j, self.sqsize)
         myImage = Image(Point(ipx, jpx), self.pic_dir + "/" + img)
         myImage.draw(self.win)
-        self.pieces_info[name][color][piece_index]["pic"] = myImage
+        self.pieces_info[piece][color][piece_index]["pic"] = myImage
 
     def get_other_player(self, current_player):
         if current_player == "black":
             return "white"
         return "black"
 
-    def get_mouse_position(self):
-        while True:
-            mouse = self.win.getMouse()
-            x, y = str(mouse)[6:-1].split(",")
-            x = float(x)
-            y = float(y)
-            return x, y
-            i, j = convert_to_i_j(x, y, self.sqsize)
-            return i, j
+    def get_mouse_position(self, pc, tot_elapsed_time, current_player, chessboard):
+        mouse = self.win.getMouse(pc, tot_elapsed_time, current_player, chessboard)
+        x, y = str(mouse)[6:-1].split(",")
+        x = float(x)
+        y = float(y)
+        return x, y
+        # i, j = convert_to_i_j(x, y, self.sqsize)
+        # return i, j
+
+    def set_start_time(self, white_start_time, black_start_time):
+        self.white_start_time = white_start_time * 60
+        self.black_start_time = black_start_time * 60
+
+    def get_start_time(self):
+        return self.white_start_time, self.black_start_time
+
+    def output_time_left(self, stop, tot_elapsed_time, index, current_player):
+        elapsed_time = stop - tot_elapsed_time[index]  # remove other players time
+        print("elapsed_time", elapsed_time)
+
+        if index == 1:
+            tot_elapsed_time = calc_time_past(0, elapsed_time, tot_elapsed_time)
+            print("tot_elapsed_time", tot_elapsed_time)
+            time_left = self.white_start_time - tot_elapsed_time[0]
+        if index == 0:
+            tot_elapsed_time = calc_time_past(1, elapsed_time, tot_elapsed_time)
+            time_left = self.black_start_time - tot_elapsed_time[1]
+        time_formatted = get_time_formated(time_left)
+        self.update_timer(time_formatted, current_player)
+
+    def update_timer(self, time_formatted, current_player):
+        # update text with new time_formatted
+        index = 2
+        if current_player == "black":
+            index = 3
+
+        self.time_text[index].setText(time_formatted)
+        print(time_formatted)
+
+    def setup_text(self):
+        self.time_text = []
+        j = [1, 8, 2, 9]
+
+        output_message = [
+            "White",
+            "Black",
+            get_time_formated(self.white_start_time),
+            get_time_formated(self.black_start_time),
+        ]
+        for m in range(len(j)):
+            time_text = Text(
+                Point(
+                    self.sqsize * (self.num_squares + self.extra_side_space / 2),
+                    (self.sqsize * (self.num_squares * j[m] / 16)),
+                ),
+                output_message[m],
+            )  # eftersom jag printar nedifrån vänster och upp
+            time_text.draw(self.win)
+            self.time_text.append(time_text)

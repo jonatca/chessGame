@@ -1,4 +1,5 @@
 from graphics import *
+import datetime
 
 
 def convert_to_px(i: int, sqsize: int) -> int:
@@ -22,7 +23,7 @@ def pieces():
                 2: {"pos": (2, 2), "moved": False},
                 3: {"pos": (2, 3), "moved": False},
                 4: {"pos": (2, 4), "moved": False},
-                5: {"pos": (3, 5), "moved": False},
+                5: {"pos": (2, 5), "moved": False},
                 6: {"pos": (2, 6), "moved": False},
                 7: {"pos": (2, 7), "moved": False},
                 8: {"pos": (2, 8), "moved": False},
@@ -31,7 +32,7 @@ def pieces():
                 1: {"pos": (7, 1), "moved": False},
                 2: {"pos": (7, 2), "moved": False},
                 3: {"pos": (7, 3), "moved": False},
-                4: {"pos": (6, 4), "moved": False},
+                4: {"pos": (7, 4), "moved": False},
                 5: {"pos": (7, 5), "moved": False},
                 6: {"pos": (7, 6), "moved": False},
                 7: {"pos": (7, 7), "moved": False},
@@ -45,12 +46,12 @@ def pieces():
         },
         "torn": {
             "white": {
-                1: {"pos": (1, 1), "moved": False},
+                1: {"pos": (4, 1), "moved": False},
                 2: {"pos": (1, 8), "moved": False},
             },
             "black": {
                 1: {"pos": (8, 1), "moved": False},
-                2: {"pos": (8, 8), "moved": False},
+                2: {"pos": (6, 8), "moved": False},
             },
             "rules": {
                 "standard_move": torn_movement,
@@ -179,3 +180,14 @@ def check_one_posibility(
             return "break", temp_move
     else:
         return None, temp_move
+
+
+def calc_time_past(index, elapsed_time, tot_elapsed_time) -> list:
+    last_time = tot_elapsed_time[index]
+    delta_time = elapsed_time - last_time
+    tot_elapsed_time[index] += delta_time
+    return tot_elapsed_time
+
+
+def get_time_formated(num_secounds):
+    return str(datetime.timedelta(seconds=num_secounds))
