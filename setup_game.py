@@ -50,7 +50,8 @@ class Setup_game:
             if fun(player):
                 button.activate()
                 return True
-        return False
+            return False
+        return True
 
     def turn_off_buttons(self):
         if self.black_kingside_rochade_button_on:
@@ -63,17 +64,29 @@ class Setup_game:
         #         self.white_kingside_rochade_button.deactivate()
         #         self.white_kingside_rochade_button_on = False
 
+    def _get_button_info(self):
+        button_on = [
+            self.black_kingside_rochade_button_on
+        ]  # , self.white_kingside_rochade_button_on]
+        player = ["black"]
+        button_center = [self.black_kingside_rochade_button_center]
+        side_fun = [self.do_kingside_rochade]
+        return [button_on, player, button_center, side_fun]
+
     def check_which_button_clicked(
         self, x: float, y: float, current_player: str
-    ) -> str:
-        if current_player == "black":
-            if self.black_kingside_rochade_button_on:
-                min_x, min_y, max_x, max_y = self.get_boundaries(
-                    self.black_kingside_rochade_button_center
-                )
-                if self.is_inside(x, y, min_x, min_y, max_x, max_y):
-                    print("gör rokad")
-                    self.do_kingside_rochade(current_player)
+    ) -> bool:
+        [button_on, player, button_center, side_fun] = self._get_button_info()
+        for m in range(len(button_on)):
+            if current_player == player[m]:
+                if button_on[m]:
+                    min_x, min_y, max_x, max_y = self.get_boundaries(button_center[m])
+                    if self.is_inside(x, y, min_x, min_y, max_x, max_y):
+                        print("gör rokad")
+                        side_fun[m](current_player)
+                        return True
+
+        return False
 
     def get_boundaries(self, button_center: tuple) -> list:
         min_x = button_center[0] - self.button_size[0] / 2

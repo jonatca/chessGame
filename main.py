@@ -19,6 +19,8 @@ def round(current_player):
     move_spot = False
     list_circles = []
     piece_selected = False
+    rochade = False
+    other_player = chessboard.get_other_player(current_player)
     while move_spot == False:
         x, y = chessboard.get_mouse_position()
         i, j = convert_to_i_j(chessboard, x, y)
@@ -40,24 +42,26 @@ def round(current_player):
         if piece_selected:
             if chessboard.check_spot(i, j, possible_moves):
                 move_spot = True
-        else:
-            other_player = chessboard.get_other_player(current_player)
-            chessboard.check_which_button_clicked(
-                x, y, other_player
-            )  # can only do rochade on the others turn, change the other her to current and fix bug
-
-    chessboard.undraw_possible_moves(list_circles)
-
-    chessboard.move_piece(piece, current_player, piece_index, i, j)
-    return [piece, piece_index, i, j]
+        if chessboard.check_which_button_clicked(
+            x, y, current_player
+        ):  # can only do rochade on the others turn, change the other her to current and fix bug
+            move_spot = True
+            rochade = True
+    if list_circles != []:
+        chessboard.undraw_possible_moves(list_circles)
+    if rochade == False:
+        chessboard.move_piece(piece, current_player, piece_index, i, j)
+        return [piece, piece_index, i, j]
+    else:
+        return [rochade, None, None, None]  # rochade == True
 
 
 def end_of_round(piece, current_player, piece_index, i, j):
     other_player = chessboard.get_other_player(current_player)
     chessboard.turn_off_buttons()
     chessboard.turn_on_buttons()
-
-    _ = chessboard.remove_piece(other_player, i, j, True)
+    if piece != True:
+        _ = chessboard.remove_piece(other_player, i, j, True)
     if chessboard.check(other_player):
         print("schack")
     else:

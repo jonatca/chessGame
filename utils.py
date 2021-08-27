@@ -31,7 +31,7 @@ def pieces():
                 1: {"pos": (7, 1), "moved": False},
                 2: {"pos": (7, 2), "moved": False},
                 3: {"pos": (7, 3), "moved": False},
-                4: {"pos": (7, 4), "moved": False},
+                4: {"pos": (6, 4), "moved": False},
                 5: {"pos": (7, 5), "moved": False},
                 6: {"pos": (7, 6), "moved": False},
                 7: {"pos": (7, 7), "moved": False},
@@ -63,7 +63,7 @@ def pieces():
                 2: {"pos": (1, 7), "moved": False},
             },
             "black": {
-                1: {"pos": (8, 2), "moved": False},
+                1: {"pos": (6, 1), "moved": False},
                 2: {"pos": (8, 7), "moved": False},
             },
             "rules": {
@@ -86,7 +86,7 @@ def pieces():
                 2: {"pos": (4, 3), "moved": False},
             },
             "black": {
-                1: {"pos": (8, 3), "moved": False},
+                1: {"pos": (3, 8), "moved": False},
                 2: {"pos": (8, 6), "moved": False},
             },
             "rules": {
