@@ -20,7 +20,6 @@ def round(current_player):
     list_circles = []
     piece_selected = False
     rochade = False
-    other_player = chessboard.get_other_player(current_player)
     while move_spot == False:
         x, y = chessboard.get_mouse_position()
         i, j = convert_to_i_j(chessboard, x, y)
@@ -64,12 +63,6 @@ def end_of_round(piece, current_player, piece_index, i, j):
         _ = chessboard.remove_piece(other_player, i, j, True)
     if chessboard.check(other_player):
         print("schack")
-    else:
-        pass
-    #    if chessboard.check_mate(other_player):
-    #     print("game over ", current_player, "wins")
-    # else:
-    #       print("check")
 
     global game_running
     if chessboard.check_mate(other_player):

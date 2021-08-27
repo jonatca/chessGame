@@ -26,64 +26,68 @@ class Setup_game:
         self.white_kingside_rochade_button_on = True
 
     def turn_on_buttons(self):
-        bol = self._turn_on_buttons(
-            self.black_kingside_rochade_button_on,
-            self.black_kingside_rochade_button,
-            "black",
-            self.can_do_kingside_rochade,
-        )
-        self.black_kingside_rochade_button_on = bol
-        # if not self.black_kingside_rochade_button_on:
-        #     if self.can_do_kingside_rochade("black"):
-        #         self.black_kingside_rochade_button.activate()
-        #         self.black_kingside_rochade_button_on = True
-
-        # if not self.white_kingside_rochade_button_on:
-        #     if self.can_do_kingside_rochade("white"):
-        #         self.white_kingside_rochade_button.activate()
-        #         self.white_kingside_rochade_button_on = True
-
-    def _turn_on_buttons(
-        self, button_on: bool, button: object, player: str, fun
-    ):  # function could be can_do_kingsdie_rochade
-        if not button_on:
-            if fun(player):
-                button.activate()
-                return True
-            return False
-        return True
+        [button_on, player, _, _, side_fun_can_do, button] = self._get_button_info()
+        bol = []
+        for m in range(len(button)):
+            bol_temp = True
+            if not button_on[m]:
+                if side_fun_can_do[m](player[m]):
+                    button[m].activate()
+                else:
+                    bol_temp = False
+            bol.append(bol_temp)
+        self.set_button_bol(bol)
 
     def turn_off_buttons(self):
-        if self.black_kingside_rochade_button_on:
-            if not self.can_do_kingside_rochade("black"):
-                self.black_kingside_rochade_button.deactivate()
-                self.black_kingside_rochade_button_on = False
+        [button_on, player, _, _, side_fun_can_do, button] = self._get_button_info()
+        bol = []
+        for m in range(len(button)):
+            bol_temp = False
+            if button_on[m]:
+                if not side_fun_can_do[m](player[m]):
+                    button[m].deactivate()
+                else:
+                    bol_temp = True
+            bol.append(bol_temp)
 
-        # if self.white_kingside_rochade_button_on:
-        #     if not self.can_do_kingside_rochade("white"):
-        #         self.white_kingside_rochade_button.deactivate()
-        #         self.white_kingside_rochade_button_on = False
+        self.set_button_bol(bol)
+
+    def set_button_bol(self, bol: bool):
+        [
+            self.black_kingside_rochade_button_on,
+            self.white_kingside_rochade_button_on,
+        ] = bol
 
     def _get_button_info(self):
         button_on = [
-            self.black_kingside_rochade_button_on
-        ]  # , self.white_kingside_rochade_button_on]
-        player = ["black"]
-        button_center = [self.black_kingside_rochade_button_center]
-        side_fun = [self.do_kingside_rochade]
-        return [button_on, player, button_center, side_fun]
+            self.black_kingside_rochade_button_on,
+            self.white_kingside_rochade_button_on,
+        ]
+        player = ["black", "white"]
+        button_center = [
+            self.black_kingside_rochade_button_center,
+            self.white_kingside_rochade_button_center,
+        ]
+        side_fun_do = [self.do_kingside_rochade, self.do_kingside_rochade]
+        button = [
+            self.black_kingside_rochade_button,
+            self.white_kingside_rochade_button,
+        ]
+        side_fun_can_do = [self.can_do_kingside_rochade, self.can_do_kingside_rochade]
+        return [button_on, player, button_center, side_fun_do, side_fun_can_do, button]
 
     def check_which_button_clicked(
         self, x: float, y: float, current_player: str
     ) -> bool:
-        [button_on, player, button_center, side_fun] = self._get_button_info()
+        [button_on, player, button_center, side_fun_do, _, _] = self._get_button_info()
+        bol = []
         for m in range(len(button_on)):
             if current_player == player[m]:
                 if button_on[m]:
                     min_x, min_y, max_x, max_y = self.get_boundaries(button_center[m])
                     if self.is_inside(x, y, min_x, min_y, max_x, max_y):
                         print("gör rokad")
-                        side_fun[m](current_player)
+                        side_fun_do[m](current_player)
                         return True
 
         return False
@@ -112,19 +116,35 @@ class Setup_game:
             self.sqsize * (self.num_squares + self.extra_side_space / 2),
             (self.sqsize * (self.num_squares * 12 / 16)),
         )
+        self.white_kingside_rochade_button_center = (
+            self.sqsize * (self.num_squares + self.extra_side_space / 2),
+            (self.sqsize * (self.num_squares * 4 / 16)),
+        )
 
     def setup_kingside_rochade_button(self):
-        self.black_kingside_rochade_button = Button(
-            self.win,
-            Point(
-                self.black_kingside_rochade_button_center[0],
-                self.black_kingside_rochade_button_center[1],
-            ),
-            self.button_size[0],
-            self.button_size[1],
-            "Gör rokad på kungsidan",
-        )
-        self.black_kingside_rochade_button.activate()
+        button_center = [
+            self.black_kingside_rochade_button_center,
+            self.white_kingside_rochade_button_center,
+        ]
+        button_name = []
+        for m in range(len(button_center)):
+            button_name.append(
+                Button(
+                    self.win,
+                    Point(
+                        button_center[m][0],
+                        button_center[m][1],
+                    ),
+                    self.button_size[0],
+                    self.button_size[1],
+                    "Gör rokad på kungsidan",
+                )
+            )
+            button_name[m].activate()
+        [
+            self.black_kingside_rochade_button,
+            self.white_kingside_rochade_button,
+        ] = button_name
 
     def can_do_kingside_rochade(self, player: str) -> bool:
         torn_moved = self.pieces_info["torn"][player][1]["moved"]
