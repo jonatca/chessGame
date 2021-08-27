@@ -27,6 +27,9 @@ class Setup_game:
         self.white_kingside_button_on = True
         self.black_queenside_button_on = True
         self.white_queenside_button_on = True
+        self.start_button_on = True
+        self.stop_button_on = True
+        self.time_is_up = False
 
     def queening_the_pawn(self, current_player: str, piece_index: int, i: int, j: int):
         i_goal = 8
@@ -41,6 +44,9 @@ class Setup_game:
                 "moved": True,
             }
             self._draw_piece(img_name, i, j, "dam", current_player, new_piece_index)
+
+    def get_time_is_up(self):
+        return self.time_is_up
 
     def turn_on_buttons(self):
         [
@@ -528,6 +534,9 @@ class Setup_game:
             tot_elapsed_time = calc_time_past(1, elapsed_time, tot_elapsed_time)
             time_left = self.black_start_time - tot_elapsed_time[1]
         time_formatted = get_time_formated(time_left)
+        if time_left <= 0:
+            self.time_is_up = True
+            time_formatted = 0
         self.update_timer(time_formatted, current_player)
 
     def update_timer(self, time_formatted, current_player):
@@ -541,7 +550,7 @@ class Setup_game:
 
     def setup_text(self):
         self.time_text = []
-        j = [1, 8, 2, 9]
+        j = [1, 9, 2, 10]
 
         output_message = [
             "White",

@@ -7,12 +7,8 @@ import datetime
 # set this input parameters
 boardSize = 800
 chessboard = Setup_game("green", "yellow", boardSize / 8)
-white_start_time = 25  # in minutes
+white_start_time = 0.1  # in minutes
 black_start_time = 25
-
-
-global game_running
-game_running = True
 
 
 def _setup_game():
@@ -67,7 +63,7 @@ def one_round(current_player, pc, tot_elapsed_time):
         return [rochade, None, None, None]  # rochade == True
 
 
-def end_of_round(piece, current_player, piece_index, i, j, end, start):
+def end_of_round(piece, current_player, piece_index, i, j):
     other_player = chessboard.get_other_player(current_player)
     chessboard.turn_off_buttons()
     chessboard.turn_on_buttons()
@@ -76,24 +72,24 @@ def end_of_round(piece, current_player, piece_index, i, j, end, start):
         if piece == "bonde":
             chessboard.queening_the_pawn(current_player, piece_index, i, j)
 
-    if chessboard.check(other_player):
-        print("schack")
-
-    global game_running
+    game_running = True
+    if chessboard.get_time_is_up():
+        print("time is up")
+        game_running = False
     if chessboard.check_mate(other_player):
         print(current_player, "wins!!")
         game_running = False
     elif chessboard.equal(other_player):
         print("lika!")
         game_running = False
-    else:
-        print("game is still running")
-        print(game_running, "game_running")
+    elif chessboard.check(other_player):
+        print("schack")
 
-    return other_player
+    return other_player, game_running
 
 
 def main():
+    game_running = True
     tot_elapsed_time = [0, 0]
     current_player = "white"
     print("setting up game")
@@ -102,8 +98,8 @@ def main():
         start = pc()  # startar en klocka
         [piece, piece_index, i, j] = one_round(current_player, pc, tot_elapsed_time)
         end = pc()
-        current_player = end_of_round(
-            piece, current_player, piece_index, i, j, end, start
+        current_player, game_running = end_of_round(
+            piece, current_player, piece_index, i, j
         )
 
         print("tot_elapsed_time", tot_elapsed_time)
