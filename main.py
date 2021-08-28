@@ -5,7 +5,7 @@ from time import sleep
 
 
 def get_start_values():  # set this input parameters
-    global white_name, game_running, tot_elapsed_time, current_player
+    global white_name, game_running, tot_elapsed_time
     global dark_col, light_col, board_size, suggested_start_time
     game_running = True
     tot_elapsed_time = [0, 0]
@@ -16,24 +16,19 @@ def get_start_values():  # set this input parameters
 
 
 def set_up_game():
+
     global white_name, black_name, chessboard, dark_col, light_col
     global board_size, suggested_start_time, input_dialog
-
     white_start_time, black_start_time = input_dialog.get_times()
     white_name, black_name = input_dialog.get_names()
-
-    chessboard = Setup_game(
-        dark_col,
-        light_col,
-        board_size / 8,
-        white_name,
-        black_name,
-    )
+    print("setting up game")
+    chessboard = Setup_game(dark_col, light_col, board_size / 8, white_name, black_name)
     chessboard.draw_board()
     chessboard.draw_pieces()
     chessboard.setup_buttons()
     chessboard.turn_off_buttons()
-    chessboard.set_start_time(white_start_time, black_start_time)
+    pause = pc()
+    chessboard.set_start_time(white_start_time, black_start_time + pause / 60)
     chessboard.setup_text(white_name, black_name)
 
 
@@ -59,9 +54,7 @@ def one_round():
             piece, piece_index = temp_piece, temp_piece_index
 
         if piece_selected:
-            if chessboard.check_spot(
-                i, j, possible_moves
-            ):  # True if player can move to spot
+            if check_spot(i, j, possible_moves):  # True if player can move to spot
                 move_spot = True
 
         if chessboard.check_which_button_clicked(x, y, current_player)[
@@ -91,7 +84,7 @@ def end_of_round():
         chessboard.remove_piece(other_player, i, j, True)
         if piece == "bonde":
             chessboard.queening_the_pawn(
-                current_player, piece_index, i, j
+                current_player, i, j
             )  # checks if pawn is on other side of board
 
     game_running, output_message = chessboard.check_if_game_over(
@@ -108,6 +101,7 @@ def main():
     get_start_values()
     input_dialog = InputDialog(suggested_start_time)
     if input_dialog.interact() == "Start":
+        input_dialog.close()
         print("setting up game")
         set_up_game()
         current_player = white_name
@@ -115,7 +109,6 @@ def main():
             while game_running:
                 one_round()
                 end_of_round()
-
             chessboard.set_winners_text(output_message)
             sleep(1000)
         except GraphicsError:

@@ -3,6 +3,7 @@ from graphics import *
 from utils import *
 from button import *
 from time import perf_counter as pc
+from typing import List, Set, Dict, Tuple, Optional, Callable
 
 
 class Setup_game:
@@ -12,17 +13,18 @@ class Setup_game:
         self.white_name = white_name
         self.black_name = black_name
         self.sqsize = size
-        self.pic_dir = "pieces"
-        self.num_squares = 8
-        self.extra_side_space = 3.859
-        self.button_size = (self.sqsize * 2.4, self.sqsize / 2)  # width,hieght
+        self.set_initial_values()
         self.win = GraphWin(
             "Schackbrädet",
             self.num_squares * self.sqsize + self.sqsize * self.extra_side_space * 2,
             self.num_squares * self.sqsize,
         )
         self.win.setBackground("lightblue")
-        self.pieces_info = pieces(white_name, black_name)
+
+    def set_initial_values(self):
+        self.num_squares = 8
+        self.extra_side_space = 3.859  # gives isch 16/9 res
+        self.pic_dir = "pieces"
         self.possible_moves = []
         self.black_kingside_button_on = True
         self.white_kingside_button_on = True
@@ -32,9 +34,20 @@ class Setup_game:
         self.pause_button_on = True
         self.time_is_up = False
         self.settings_button_clicked = False
-        self.pause_time = {white_name: 0, black_name: 0}
+        self.pause_time = {self.white_name: 0, self.black_name: 0}
+        self.button_size = (self.sqsize * 2.4, self.sqsize / 2)  # width,hieght
+        self.pieces_info = pieces(self.white_name, self.black_name)
 
-    def queening_the_pawn(self, current_player: str, piece_index: int, i: int, j: int):
+    def get_time_is_up(self) -> bool:
+        return self.time_is_up
+
+    def get_start_button_on(self) -> bool:
+        return self.start_button_on
+
+    def get_pause_button_on(self) -> bool:
+        return self.pause_button_on
+
+    def queening_the_pawn(self, current_player: str, i: int, j: int):
         i_goal = 8
         if current_player == self.black_name:
             i_goal = 1
@@ -48,15 +61,6 @@ class Setup_game:
             }
             self._draw_piece(img_name, i, j, "dam", current_player, new_piece_index)
 
-    def get_time_is_up(self):
-        return self.time_is_up
-
-    def get_start_button_on(self):
-        return self.start_button_on
-
-    def get_pause_button_on(self):
-        return self.pause_button_on
-
     def turn_on_buttons(self):
         [
             button_on,
@@ -66,7 +70,7 @@ class Setup_game:
             side_fun_can_do,
             button,
             side,
-        ] = self._get_button_info()
+        ] = get_button_info(self)
         bol = []
         for m in range(len(button)):
             bol_temp = True
@@ -81,7 +85,7 @@ class Setup_game:
                 button[m].activate()
 
             bol.append(bol_temp)
-        self.set_button_bol(bol)
+        set_button_bol(self, bol)
 
     def turn_off_buttons(self):
         [
@@ -92,7 +96,7 @@ class Setup_game:
             side_fun_can_do,
             button,
             side,
-        ] = self._get_button_info()
+        ] = get_button_info(self)
         bol = []
         for m in range(len(button)):
             bol_temp = False
@@ -108,17 +112,7 @@ class Setup_game:
 
             bol.append(bol_temp)
 
-        self.set_button_bol(bol)
-
-    def set_button_bol(self, bol: bool):
-        [
-            self.black_kingside_button_on,
-            self.white_kingside_button_on,
-            self.black_queenside_button_on,
-            self.white_queenside_button_on,
-            self.start_button_on,
-            self.pause_button_on,
-        ] = bol
+        set_button_bol(self, bol)
 
     def start_game(self, _, not_used):
         print("starts game")
@@ -128,11 +122,10 @@ class Setup_game:
         self.pause_button.activate()
         self.start_button.deactivate()
 
-    def pause_game(self, current_player, _):
-
+    def pause_game(self, current_player: str, _):
+        print("pauses game")
         self.start_button.activate()
         self.pause_button.deactivate()
-        print("pauses game")
         self.settings_button_clicked = True
         self.pause_button_on = False
         self.start_button_on = True
@@ -144,69 +137,9 @@ class Setup_game:
         end = pc()
         self.pause_time[current_player] += end - start
 
-    def _get_button_info(self):
-        button_on = [
-            self.black_kingside_button_on,
-            self.white_kingside_button_on,
-            self.black_queenside_button_on,
-            self.white_queenside_button_on,
-            self.start_button_on,
-            self.pause_button_on,
-        ]
-        player = [
-            self.black_name,
-            self.white_name,
-            self.black_name,
-            self.white_name,
-            "start",
-            "pause",
-        ]
-        button_center = [
-            self.black_kingside_button_center,
-            self.white_kingside_button_center,
-            self.black_queenside_button_center,
-            self.white_queenside_button_center,
-            self.start_button_center,
-            self.pause_button_center,
-        ]
-        side_fun_do = [
-            self.do_rochade,
-            self.do_rochade,
-            self.do_rochade,
-            self.do_rochade,
-            self.start_game,
-            self.pause_game,
-        ]
-        button = [
-            self.black_kingside_button,
-            self.white_kingside_button,
-            self.black_queenside_button,
-            self.white_queenside_button,
-            self.start_button,
-            self.pause_button,
-        ]
-        side_fun_can_do = [
-            self.can_do_rochade,
-            self.can_do_rochade,
-            self.can_do_rochade,
-            self.can_do_rochade,
-            None,
-            None,
-        ]
-        side = ["kung", "kung", "dam", "dam", None, None]
-        return [
-            button_on,
-            player,
-            button_center,
-            side_fun_do,
-            side_fun_can_do,
-            button,
-            side,
-        ]
-
     def check_which_button_clicked(
         self, x: float, y: float, current_player: str = None
-    ) -> bool:
+    ) -> Tuple:
         [
             button_on,
             player,
@@ -215,40 +148,23 @@ class Setup_game:
             _,
             _,
             side,
-        ] = self._get_button_info()
-        bol = []
+        ] = get_button_info(self)
         for m in range(len(button_on)):
             if current_player == player[m] or player[m] in ["start", "pause"]:
                 if button_on[m]:
-                    min_x, min_y, max_x, max_y = self.get_boundaries(button_center[m])
-                    if self.is_inside(x, y, min_x, min_y, max_x, max_y):
+                    min_x, min_y, max_x, max_y = get_button_boundaries(
+                        self, button_center[m]
+                    )
+                    if is_inside(x, y, min_x, min_y, max_x, max_y):
                         side_fun_do[m](current_player, side[m])
-
                         return True, player[m]
-
         return False, False
-
-    def get_boundaries(self, button_center: tuple) -> list:
-        min_x = button_center[0] - self.button_size[0] / 2
-        min_y = button_center[1] - self.button_size[1] / 2
-        max_x = button_center[0] + self.button_size[0] / 2
-        max_y = button_center[1] + self.button_size[1] / 2
-        return [min_x, min_y, max_x, max_y]
-
-    def is_inside(self, x, y, min_x, min_y, max_x, max_y) -> bool:
-        if x >= min_x:
-            if x <= max_x:
-                if y >= min_y:
-                    if y <= max_y:
-                        return True
-        return False
 
     def setup_buttons(self):
         self.set_button_centers()
-        self.setup_rochade_buttons()
+        self._setup_buttons()
 
     def set_button_centers(self):
-
         self.black_kingside_button_center = (
             self.sqsize * (self.num_squares + self.extra_side_space * 3 / 2),
             (self.sqsize * (self.num_squares * 4 / 16)),
@@ -274,7 +190,7 @@ class Setup_game:
             (self.sqsize * (self.num_squares * 10 / 16)),
         )
 
-    def setup_rochade_buttons(self):
+    def _setup_buttons(self):
         button_center = [
             self.black_kingside_button_center,
             self.white_kingside_button_center,
@@ -284,10 +200,10 @@ class Setup_game:
             self.pause_button_center,
         ]
         message = [
-            "rokad kungsidan",
-            "rokad kungsidan",
-            "rokad damsidan",
-            "rokad damsidan",
+            "Rokad kungsidan",
+            "Rokad kungsidan",
+            "Rokad damsidan",
+            "Rokad damsidan",
             "Start",
             "Paus",
         ]
@@ -389,7 +305,7 @@ class Setup_game:
         piece_index: int,
         current_player: str,
         only_attack: bool,
-    ):
+    ) -> List:
         possible_moves_with_check = self.check_possibilities(
             piece, piece_index, current_player, only_attack
         )
@@ -405,7 +321,7 @@ class Setup_game:
         piece_index: int,
         current_player: str,
         only_attack: bool,
-    ) -> list:
+    ) -> List:
         i, j = self.pieces_info[piece][current_player][piece_index]["pos"]
         possible_moves = []
         rules = self.pieces_info[piece]["rules"]
@@ -446,13 +362,12 @@ class Setup_game:
                     possible_moves.append(temp_move)
                 if bre == "break":
                     break
-
-        return possible_moves  # kolla så att detta inte gör så att man står i schack
+        return possible_moves
         # returns a list of tuples of i,j possible moves
 
     def potential_movement_check(
         self, piece: str, piece_index: int, current_player: str, possible_moves: list
-    ) -> list:  # returns True if movement leads to check on my self
+    ) -> List:
         other_player = self.get_other_player(current_player)
         m = 0
         new_possible_moves = possible_moves.copy()
@@ -471,8 +386,8 @@ class Setup_game:
 
             # restore piece
             if object != None:
-                self.restore_piece(
-                    remove_piece, other_player, remove_piece_index, object
+                restore_piece(
+                    self, remove_piece, other_player, remove_piece_index, object
                 )
 
             self.pieces_info[piece][current_player][piece_index]["pos"] = (
@@ -484,7 +399,7 @@ class Setup_game:
 
     def remove_piece(
         self, current_player: str, i: int, j: int, graphical: bool
-    ) -> dict:
+    ) -> List:  # [object, str, int]:
         remove_piece, remove_piece_index = self.exist_piece_here(current_player, i, j)
         if remove_piece != None:
             if graphical:
@@ -497,19 +412,7 @@ class Setup_game:
             return [object, remove_piece, remove_piece_index]
         return None, None, None
 
-    def restore_piece(
-        self, piece: str, current_player: str, piece_index: int, object: dict
-    ):
-        self.pieces_info[piece][current_player][piece_index] = object
-
-    def check_spot(self, i: int, j: int, possible_moves: list) -> bool:
-        for i_temp, j_temp in possible_moves:
-            if i_temp == i:
-                if j_temp == j:
-                    return True
-        return False
-
-    def exist_piece_here(self, check_player: str, i: int, j: int):
+    def exist_piece_here(self, check_player: str, i: int, j: int) -> Tuple[str, int]:
 
         if check_player == "both":
             check_players = [self.white_name, self.black_name]
@@ -525,7 +428,7 @@ class Setup_game:
                             return piece, piece_index
         return None, None
 
-    def undraw_possible_moves(self, list_circles: list):
+    def undraw_possible_moves(self, list_circles: list):  # util
         for circle in list_circles:
             circle.undraw()
 
@@ -543,7 +446,7 @@ class Setup_game:
         graphic_piece.move(i_px, j_px)
         self.pieces_info[piece][current_player][piece_index]["moved"] = True
 
-    def draw_possible_moves(self, possible_moves: list):
+    def draw_possible_moves(self, possible_moves: list) -> List:
         list_circles = []
         radius = self.sqsize / 8
         for i, j in possible_moves:
@@ -588,37 +491,42 @@ class Setup_game:
 
     def _draw_piece(
         self, img: str, i: int, j: int, piece: str, color: str, piece_index: int
-    ):
+    ) -> str:
         ipx = convert_to_px(i + self.extra_side_space, self.sqsize)
         jpx = convert_to_px(j, self.sqsize)
         myImage = Image(Point(ipx, jpx), self.pic_dir + "/" + img)
         myImage.draw(self.win)
         self.pieces_info[piece][color][piece_index]["pic"] = myImage
 
-    def get_other_player(self, current_player):
+    def get_other_player(self, current_player) -> str:
         if current_player == self.black_name:
             return self.white_name
         return self.black_name
 
-    def get_mouse_position(self, pc=None, tot_elapsed_time=None, current_player=None):
-        mouse = self.win.getMouse(pc, tot_elapsed_time, current_player, self)
+    def get_mouse_position(
+        self,
+        pc: Callable = None,
+        tot_elapsed_time: List = None,
+        current_player: str = None,
+    ) -> Tuple[int, int]:
+        mouse = self.win.getMouseWithTime(pc, tot_elapsed_time, current_player, self)
         x, y = str(mouse)[6:-1].split(",")
         x = float(x)
         y = float(y)
         return x, y
-        # i, j = convert_to_i_j(x, y, self.sqsize)
-        # return i, j
 
-    def set_start_time(self, white_start_time, black_start_time):
+    def set_start_time(self, white_start_time: float, black_start_time: float):
         self.white_start_time = white_start_time * 60
         self.black_start_time = black_start_time * 60
 
-    def get_start_time(self):
-        return self.white_start_time, self.black_start_time
+    # def get_start_time(self) -> Tuple[int, int]:
+    #     return self.white_start_time, self.black_start_time
 
-    def output_time_left(self, stop, tot_elapsed_time, index, current_player):
+    def output_time_left(self, stop: int, tot_elapsed_time: list, current_player: str):
+        index = 0
+        if current_player == self.black_name:
+            index = 1
         elapsed_time = stop - tot_elapsed_time[index]  # remove other players time
-
         if index == 1:
             tot_elapsed_time = calc_time_past(0, elapsed_time, tot_elapsed_time)
             time_left = (
@@ -639,7 +547,7 @@ class Setup_game:
             time_formatted = 0
         self.update_timer(time_formatted, current_player)
 
-    def update_timer(self, time_formatted, current_player):
+    def update_timer(self, time_formatted: str, current_player: str):
         # update text with new time_formatted
         index = 2
         if current_player == self.black_name:
@@ -647,7 +555,7 @@ class Setup_game:
 
         self.time_text[index].setText(time_formatted)
 
-    def setup_text(self, white, black):
+    def setup_text(self, white: str, black: str):
         self.time_text = []
         j = [1, 1, 2, 2]
         i = [
@@ -674,7 +582,7 @@ class Setup_game:
             time_text.draw(self.win)
             self.time_text.append(time_text)
 
-    def undraw_circles(self, list_circles):
+    def undraw_circles(self, list_circles: List):
         if list_circles != []:
             self.undraw_possible_moves(list_circles)
 
@@ -702,7 +610,7 @@ class Setup_game:
                 temp_text.draw(self.win)
         print(output_message)
 
-    def set_check_text(self, player):
+    def set_check_text(self, player: str):
         index = 0
         if player == self.black_name:
             index = 1
@@ -729,7 +637,9 @@ class Setup_game:
         except AttributeError:
             pass
 
-    def check_if_game_over(self, current_player, other_player):
+    def check_if_game_over(
+        self, current_player: str, other_player: str
+    ) -> Tuple[bool, str]:
         game_running = True
         output_message = None
         if self.get_time_is_up():
