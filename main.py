@@ -6,16 +6,14 @@ from time import sleep
 
 # set this input parameters
 boardSize = 650
-white_suggested_start_time = 30  # in minutes
-black_suggested_start_time = 30
-input_dialog = InputDialog(white_suggested_start_time, black_suggested_start_time)
+
+input_dialog = InputDialog()
 
 
-def _setup_game():
-    global white_name, black_name, chessboard, check
+def setup_the_game():
+    global white_name, black_name, chessboard
     white_start_time, black_start_time = input_dialog.get_times()
     white_name, black_name = input_dialog.get_names()
-    white_side = input_dialog.get_sides()
 
     chessboard = Setup_game(
         "darkgreen",
@@ -23,7 +21,6 @@ def _setup_game():
         boardSize / 8,
         white_name,
         black_name,
-        white_side,
     )
     chessboard.draw_board()
     chessboard.draw_pieces()
@@ -31,7 +28,6 @@ def _setup_game():
     chessboard.turn_off_buttons()
     chessboard.set_start_time(white_start_time, black_start_time)
     chessboard.setup_text(white_name, black_name)
-    check = False
 
 
 def one_round(current_player, pc, tot_elapsed_time):
@@ -83,7 +79,7 @@ def one_round(current_player, pc, tot_elapsed_time):
 
 
 def end_of_round(piece, current_player, piece_index, i, j):
-    global chessboard, output_message, check
+    global chessboard, output_message
     other_player = chessboard.get_other_player(current_player)
     chessboard.turn_off_buttons()
     chessboard.turn_on_buttons()
@@ -121,15 +117,21 @@ def end_of_round(piece, current_player, piece_index, i, j):
     return other_player, game_running
 
 
-def main():
-    global white_name, black_name
+def get_start_values():
+    global white_name, game_running, tot_elapsed_time
     game_running = True
     tot_elapsed_time = [0, 0]
+    current_player = white_name
+    return current_player
+
+
+def main():
+    global white_name, black_name, game_running, tot_elapsed_time
 
     if input_dialog.interact() == "Start":
         print("setting up game")
-        _setup_game()
-        current_player = white_name
+        setup_the_game()
+        current_player = get_start_values()
         while game_running:
             [piece, piece_index, i, j] = one_round(current_player, pc, tot_elapsed_time)
             current_player, game_running = end_of_round(

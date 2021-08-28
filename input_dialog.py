@@ -5,11 +5,12 @@ from button import *
 class InputDialog:
     """Takes the initial angle and velocity values, and the current wind value"""
 
-    def __init__(self, white_start_time, black_start_time):
+    def __init__(self):
         self.win = win = GraphWin("Meny", 400, 400)
         self.win.setBackground("lightblue")
         win.setCoords(0, 10, 10, 0)
-
+        white_start_time = 30  # in minutes
+        black_start_time = 30  # suggested start_time
         Text(Point(3, 1), "Time White (min)").draw(win)
         self.white_time = Entry(Point(7, 1), 10).draw(win)
         self.white_time.setText(str(white_start_time))
@@ -25,10 +26,6 @@ class InputDialog:
         Text(Point(3, 4), "Black players name").draw(win)
         self.black_name = Entry(Point(7, 4), 10).draw(win)
         self.black_name.setText("Black")
-
-        Text(Point(3, 5), "Whites position (left/down)").draw(win)
-        self.white_position = Entry(Point(7, 5), 10).draw(win)
-        self.white_position.setText("left")
 
         self.start = Button(win, Point(3.5, 8), 1.25, 0.5, "Start")
         self.start.activate()
@@ -55,12 +52,7 @@ class InputDialog:
     def get_names(self):
         w = self.white_name.getText()
         b = self.black_name.getText()
-
         return w, b
-
-    def get_sides(self):
-        w = self.white_position.getText()
-        return w
 
     def close(self):
         self.win.close()

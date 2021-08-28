@@ -27,7 +27,7 @@ def pieces(white_name, black_name):
             white_name: {
                 1: {"pos": (2, 1), "moved": False},
                 2: {"pos": (2, 2), "moved": False},
-                3: {"pos": (3, 3), "moved": False},
+                3: {"pos": (2, 3), "moved": False},
                 4: {"pos": (2, 4), "moved": False},
                 5: {"pos": (2, 5), "moved": False},
                 6: {"pos": (2, 6), "moved": False},
@@ -56,7 +56,7 @@ def pieces(white_name, black_name):
                 2: {"pos": (1, 8), "moved": False},
             },
             black_name: {
-                1: {"pos": (6, 6), "moved": False},
+                1: {"pos": (8, 1), "moved": False},
                 2: {"pos": (8, 8), "moved": False},
             },
             "rules": {
@@ -70,7 +70,7 @@ def pieces(white_name, black_name):
                 2: {"pos": (1, 7), "moved": False},
             },
             black_name: {
-                1: {"pos": (4, 6), "moved": False},
+                1: {"pos": (8, 2), "moved": False},
                 2: {"pos": (8, 7), "moved": False},
             },
             "rules": {
@@ -93,7 +93,7 @@ def pieces(white_name, black_name):
                 2: {"pos": (1, 6), "moved": False},
             },
             black_name: {
-                1: {"pos": (4, 5), "moved": False},
+                1: {"pos": (8, 3), "moved": False},
                 2: {"pos": (8, 6), "moved": False},
             },
             "rules": {

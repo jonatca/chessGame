@@ -9,12 +9,12 @@ from time import perf_counter as pc
 
 
 class Setup_game:
-    def __init__(self, black, white, size, white_name, black_name, white_position):
+    def __init__(self, black, white, size, white_name, black_name):
         self.black = black
         self.white = white
         self.white_name = white_name
         self.black_name = black_name
-        self.white_position = white_position
+        # self.white_position = white_position
         self.sqsize = size
         self.pic_dir = "pieces"
         self.num_squares = 8
