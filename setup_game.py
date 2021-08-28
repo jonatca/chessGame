@@ -9,9 +9,9 @@ from time import perf_counter as pc
 
 
 class Setup_game:
-    def __init__(self, black, white, size, white_name, black_name):
-        self.black = black
-        self.white = white
+    def __init__(self, dark_col, light_col, size, white_name, black_name):
+        self.black = dark_col
+        self.white = light_col
         self.white_name = white_name
         self.black_name = black_name
         # self.white_position = white_position
@@ -369,11 +369,8 @@ class Setup_game:
         for piece in self.pieces_info:
             for piece_index in self.pieces_info[piece][player]:
 
-                possible_moves = self.check_possibilities(
+                possible_moves = self.get_possible_moves(
                     piece, piece_index, player, False
-                )
-                possible_moves = self.potential_movement_check(
-                    piece, piece_index, player, possible_moves
                 )
                 if possible_moves != []:
                     return True
@@ -388,13 +385,23 @@ class Setup_game:
     def equal(self, other_player: str):
         if not self.has_possible_moves(other_player):
             return True
-
-        # checks if only kings are left -> return True
-        # for piece in self.pieces_info:
-        #     for piece_index in self.pieces_info[piece]
-        #     if piece != "kung":
-        #         return False
         return False
+
+    def get_possible_moves(
+        self,
+        piece: str,
+        piece_index: int,
+        current_player: str,
+        only_attack: bool,
+    ):
+        possible_moves_with_check = self.check_possibilities(
+            piece, piece_index, current_player, only_attack
+        )
+
+        possible_moves = self.potential_movement_check(
+            piece, piece_index, current_player, possible_moves_with_check
+        )
+        return possible_moves
 
     def check_possibilities(
         self,
@@ -671,7 +678,11 @@ class Setup_game:
             time_text.draw(self.win)
             self.time_text.append(time_text)
 
-    def set_winners_text(self, output_message: str, player1, player2):
+    def undraw_circles(self, list_circles):
+        if list_circles != []:
+            self.undraw_possible_moves(list_circles)
+
+    def set_winners_text(self, output_message: str):
 
         # winning_player = self.get_other_player(losing_player)
 
@@ -679,7 +690,7 @@ class Setup_game:
             self.extra_side_space / 2,
             self.num_squares + 3 / 2 * self.extra_side_space,
         ]
-        color = [player1, player2]
+        color = [self.white_name, self.black_name]
         print(color)
         for m in range(len(output_message)):
             if color[m] != None:
@@ -721,3 +732,26 @@ class Setup_game:
             self.check_text.undraw()
         except AttributeError:
             pass
+
+    def check_if_game_over(self, current_player, other_player):
+        game_running = True
+        output_message = None
+        if self.get_time_is_up():
+            output_message = {
+                other_player: f"Time is up\nGood job {other_player}\nYou win!",
+                current_player: f"Time is up\nNice try {current_player}\nYou lost",
+            }
+            game_running = False
+        elif self.check_mate(other_player):
+            output_message = {
+                current_player: f"Check mate,\nGood job {current_player}\nYou win!",
+                other_player: f"Check mate\nNice try {other_player}\nYou lost",
+            }
+            game_running = False
+        elif self.equal(other_player):
+            output_message = {
+                current_player: f"Equal,\nGood job {current_player}",
+                other_player: f"Equal\nGood job {other_player}",
+            }
+            game_running = False
+        return game_running, output_message

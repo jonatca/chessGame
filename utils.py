@@ -12,12 +12,6 @@ def convert_to_i_j(chessboard, x: float, y: float) -> int:
     return i, j
 
 
-def convert_to_pos(white_position, i, j):
-    if white_position == "down":
-        pass
-    return 9 - j, 9 - i
-
-
 def pieces(white_name, black_name):
     torn_movement = [(1, 0), (-1, 0), (0, 1), (0, -1)]  # (i,j), i=x=right
     lopare_movement = [(1, 1), (-1, -1), (1, -1), (-1, 1)]
