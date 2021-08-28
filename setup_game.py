@@ -1,8 +1,5 @@
-from genericpath import exists
 from os import *
-from tkinter import image_names
 from graphics import *
-from time import sleep
 from utils import *
 from button import *
 from time import perf_counter as pc
@@ -14,7 +11,6 @@ class Setup_game:
         self.white = light_col
         self.white_name = white_name
         self.black_name = black_name
-        # self.white_position = white_position
         self.sqsize = size
         self.pic_dir = "pieces"
         self.num_squares = 8
