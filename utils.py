@@ -12,13 +12,19 @@ def convert_to_i_j(chessboard, x: float, y: float) -> int:
     return i, j
 
 
-def pieces():
+def convert_to_pos(white_position, i, j):
+    if white_position == "down":
+        pass
+    return 9 - j, 9 - i
+
+
+def pieces(white_name, black_name):
     torn_movement = [(1, 0), (-1, 0), (0, 1), (0, -1)]  # (i,j), i=x=right
     lopare_movement = [(1, 1), (-1, -1), (1, -1), (-1, 1)]
 
     pieces_info = {
         "bonde": {
-            "white": {
+            white_name: {
                 1: {"pos": (2, 1), "moved": False},
                 2: {"pos": (2, 2), "moved": False},
                 3: {"pos": (3, 3), "moved": False},
@@ -28,7 +34,7 @@ def pieces():
                 7: {"pos": (2, 7), "moved": False},
                 8: {"pos": (2, 8), "moved": False},
             },
-            "black": {
+            black_name: {
                 1: {"pos": (7, 1), "moved": False},
                 2: {"pos": (7, 2), "moved": False},
                 3: {"pos": (7, 3), "moved": False},
@@ -45,12 +51,12 @@ def pieces():
             },
         },
         "torn": {
-            "white": {
+            white_name: {
                 1: {"pos": (1, 1), "moved": False},
                 2: {"pos": (1, 8), "moved": False},
             },
-            "black": {
-                1: {"pos": (4, 4), "moved": False},
+            black_name: {
+                1: {"pos": (6, 6), "moved": False},
                 2: {"pos": (8, 8), "moved": False},
             },
             "rules": {
@@ -59,12 +65,12 @@ def pieces():
             },
         },
         "hast": {
-            "white": {
+            white_name: {
                 1: {"pos": (1, 2), "moved": False},
                 2: {"pos": (1, 7), "moved": False},
             },
-            "black": {
-                1: {"pos": (8, 2), "moved": False},
+            black_name: {
+                1: {"pos": (4, 6), "moved": False},
                 2: {"pos": (8, 7), "moved": False},
             },
             "rules": {
@@ -82,12 +88,12 @@ def pieces():
             },
         },
         "lopare": {
-            "white": {
+            white_name: {
                 1: {"pos": (1, 3), "moved": False},
                 2: {"pos": (1, 6), "moved": False},
             },
-            "black": {
-                1: {"pos": (8, 3), "moved": False},
+            black_name: {
+                1: {"pos": (4, 5), "moved": False},
                 2: {"pos": (8, 6), "moved": False},
             },
             "rules": {
@@ -96,16 +102,16 @@ def pieces():
             },
         },
         "kung": {
-            "white": {1: {"pos": (1, 4), "moved": False}},
-            "black": {1: {"pos": (8, 4), "moved": False}},
+            white_name: {1: {"pos": (1, 4), "moved": False}},
+            black_name: {1: {"pos": (8, 4), "moved": False}},
             "rules": {
                 "standard_move": lopare_movement + torn_movement,
                 "rekursive": 1,
             },
         },
         "dam": {
-            "white": {1: {"pos": (1, 5), "moved": False}},
-            "black": {1: {"pos": (8, 5), "moved": False}},
+            white_name: {1: {"pos": (1, 5), "moved": False}},
+            black_name: {1: {"pos": (8, 5), "moved": False}},
             "rules": {
                 "standard_move": lopare_movement + torn_movement,
                 "rekursive": 8,
@@ -190,4 +196,8 @@ def calc_time_past(index, elapsed_time, tot_elapsed_time) -> list:
 
 
 def get_time_formated(num_secounds):
-    return str(datetime.timedelta(seconds=num_secounds))
+    formatted_time = str(datetime.timedelta(seconds=num_secounds))
+    # print(len(formatted_time), "längd")
+    if len(formatted_time) == 14:
+        formatted_time = formatted_time[:-5]
+    return formatted_time

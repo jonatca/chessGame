@@ -5,12 +5,16 @@ from graphics import *
 from time import sleep
 from utils import *
 from button import *
+from time import perf_counter as pc
 
 
 class Setup_game:
-    def __init__(self, black, white, size):
+    def __init__(self, black, white, size, white_name, black_name, white_position):
         self.black = black
         self.white = white
+        self.white_name = white_name
+        self.black_name = black_name
+        self.white_position = white_position
         self.sqsize = size
         self.pic_dir = "pieces"
         self.num_squares = 8
@@ -22,7 +26,7 @@ class Setup_game:
             self.num_squares * self.sqsize,
         )
         self.win.setBackground("lightblue")
-        self.pieces_info = pieces()
+        self.pieces_info = pieces(white_name, black_name)
         self.possible_moves = []
         self.black_kingside_button_on = True
         self.white_kingside_button_on = True
@@ -32,10 +36,11 @@ class Setup_game:
         self.pause_button_on = True
         self.time_is_up = False
         self.settings_button_clicked = False
+        self.pause_time = {white_name: 0, black_name: 0}
 
     def queening_the_pawn(self, current_player: str, piece_index: int, i: int, j: int):
         i_goal = 8
-        if current_player == "black":
+        if current_player == self.black_name:
             i_goal = 1
         if i == i_goal:
             self.remove_piece(current_player, i, j, True)
@@ -72,7 +77,7 @@ class Setup_game:
             if not button_on[m]:
                 if side_fun_can_do[m] == None:
                     bol_temp = False
-                if side_fun_can_do[m](player[m], side[m]):
+                elif side_fun_can_do[m](player[m], side[m]):
                     button[m].activate()
                 else:
                     bol_temp = False
@@ -98,11 +103,10 @@ class Setup_game:
             if button_on[m]:
                 if side_fun_can_do[m] == None:
                     bol_temp = True
+                elif not side_fun_can_do[m](player[m], side[m]):
+                    button[m].deactivate()
                 else:
-                    if not side_fun_can_do[m](player[m], side[m]):
-                        button[m].deactivate()
-                    else:
-                        bol_temp = True
+                    bol_temp = True
             elif side_fun_can_do[m] == None:
                 button[m].deactivate()
 
@@ -128,17 +132,21 @@ class Setup_game:
         self.pause_button.activate()
         self.start_button.deactivate()
 
-    def pause_game(self, _, not_used):
+    def pause_game(self, current_player, _):
+
         self.start_button.activate()
         self.pause_button.deactivate()
         print("pauses game")
         self.settings_button_clicked = True
         self.pause_button_on = False
         self.start_button_on = True
+        start = pc()
         x, y = self.get_mouse_position()
         while self.check_which_button_clicked(x, y)[1] != "start":
             x, y = self.get_mouse_position()
             print("pausing")
+        end = pc()
+        self.pause_time[current_player] += end - start
 
     def _get_button_info(self):
         button_on = [
@@ -149,7 +157,14 @@ class Setup_game:
             self.start_button_on,
             self.pause_button_on,
         ]
-        player = ["black", "white", "black", "white", "start", "pause"]
+        player = [
+            self.black_name,
+            self.white_name,
+            self.black_name,
+            self.white_name,
+            "start",
+            "pause",
+        ]
         button_center = [
             self.black_kingside_button_center,
             self.white_kingside_button_center,
@@ -307,7 +322,7 @@ class Setup_game:
     def can_do_rochade(self, player: str, side) -> bool:
         i = 1
         j_list = [2, 3]
-        if player == "black":
+        if player == self.black_name:
             i = 8
         torn_index = 1
         if side == "dam":
@@ -329,7 +344,7 @@ class Setup_game:
         i = 1
         j_list = [2, 3]
         torn_index = 1
-        if player == "black":
+        if player == self.black_name:
             i = 8
         if side == "dam":
             j_list = [6, 5]
@@ -392,11 +407,11 @@ class Setup_game:
         possible_moves = []
         rules = self.pieces_info[piece]["rules"]
         dir = 1
-        other_player = "black"
+        other_player = self.black_name
         rekursive = rules["rekursive"]
-        if current_player == "black":
+        if current_player == self.black_name:
             dir = -1
-            other_player = "white"
+            other_player = self.white_name
 
         if piece == "bonde":
             # checks if bonde can attack
@@ -494,7 +509,7 @@ class Setup_game:
     def exist_piece_here(self, check_player: str, i: int, j: int):
 
         if check_player == "both":
-            check_players = ["white", "black"]
+            check_players = [self.white_name, self.black_name]
         else:
             check_players = [check_player]
         for check_player in check_players:
@@ -556,10 +571,16 @@ class Setup_game:
     def draw_pieces(self):
         for img_name in listdir(self.pic_dir):
             color, piece = img_name.split("_")
+            if color == "black":
+                color = self.black_name
+            else:
+                color = self.white_name
+
             piece = piece[:-4]
             piece_dict = self.pieces_info[piece][color]
             for piece_index in piece_dict:
                 i, j = piece_dict[piece_index]["pos"]
+                # i, j = convert_to_pos(self.white_position, i, j)
                 self._draw_piece(img_name, i, j, piece, color, piece_index)
 
     def _draw_piece(
@@ -572,9 +593,9 @@ class Setup_game:
         self.pieces_info[piece][color][piece_index]["pic"] = myImage
 
     def get_other_player(self, current_player):
-        if current_player == "black":
-            return "white"
-        return "black"
+        if current_player == self.black_name:
+            return self.white_name
+        return self.black_name
 
     def get_mouse_position(self, pc=None, tot_elapsed_time=None, current_player=None):
         mouse = self.win.getMouse(pc, tot_elapsed_time, current_player, self)
@@ -597,10 +618,18 @@ class Setup_game:
 
         if index == 1:
             tot_elapsed_time = calc_time_past(0, elapsed_time, tot_elapsed_time)
-            time_left = self.white_start_time - tot_elapsed_time[0]
+            time_left = (
+                self.white_start_time
+                - tot_elapsed_time[0]
+                + self.pause_time[current_player]
+            )
         if index == 0:
             tot_elapsed_time = calc_time_past(1, elapsed_time, tot_elapsed_time)
-            time_left = self.black_start_time - tot_elapsed_time[1]
+            time_left = (
+                self.black_start_time
+                - tot_elapsed_time[1]
+                + self.pause_time[current_player]
+            )
         time_formatted = get_time_formated(time_left)
         if time_left <= 0:
             self.time_is_up = True
@@ -610,7 +639,7 @@ class Setup_game:
     def update_timer(self, time_formatted, current_player):
         # update text with new time_formatted
         index = 2
-        if current_player == "black":
+        if current_player == self.black_name:
             index = 3
 
         self.time_text[index].setText(time_formatted)
@@ -642,14 +671,53 @@ class Setup_game:
             time_text.draw(self.win)
             self.time_text.append(time_text)
 
-    def set_winners_text(self, output_message: str):
-        time_text = Text(
+    def set_winners_text(self, output_message: str, player1, player2):
+
+        # winning_player = self.get_other_player(losing_player)
+
+        i_list = [
+            self.extra_side_space / 2,
+            self.num_squares + 3 / 2 * self.extra_side_space,
+        ]
+        color = [player1, player2]
+        print(color)
+        for m in range(len(output_message)):
+            if color[m] != None:
+                temp_text = Text(
+                    Point(
+                        self.sqsize * i_list[m],
+                        self.sqsize * (self.num_squares * 13 / 16),
+                    ),
+                    output_message[color[m]],
+                )  # eftersom jag printar nedifrån vänster och upp
+                temp_text.setSize(19)
+                temp_text.setTextColor("black")
+                temp_text.draw(self.win)
+        print(output_message)
+
+    def set_check_text(self, player):
+        index = 0
+        if player == self.black_name:
+            index = 1
+
+        i_list = [
+            self.extra_side_space / 2,
+            self.num_squares + 3 / 2 * self.extra_side_space,
+        ]
+
+        self.check_text = Text(
             Point(
-                self.sqsize * self.num_squares / 2,
-                self.sqsize * (self.num_squares * 7 / 16),
+                self.sqsize * i_list[index],
+                self.sqsize * (self.num_squares * 13 / 16),
             ),
-            output_message,
+            "Check",
         )  # eftersom jag printar nedifrån vänster och upp
-        time_text.setSize(35)
-        time_text.setTextColor("blue")
-        time_text.draw(self.win)
+        self.check_text.setSize(19)
+        self.check_text.setTextColor("black")
+        self.check_text.draw(self.win)
+
+    def undraw_check_text(self):
+        try:
+            self.check_text.undraw()
+        except AttributeError:
+            pass

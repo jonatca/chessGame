@@ -12,17 +12,26 @@ input_dialog = InputDialog(white_suggested_start_time, black_suggested_start_tim
 
 
 def _setup_game():
-    global chessboard
+    global white_name, black_name, chessboard, check
     white_start_time, black_start_time = input_dialog.get_times()
     white_name, black_name = input_dialog.get_names()
+    white_side = input_dialog.get_sides()
 
-    chessboard = Setup_game("darkgreen", "lightgreen", boardSize / 8)
+    chessboard = Setup_game(
+        "darkgreen",
+        "lightgreen",
+        boardSize / 8,
+        white_name,
+        black_name,
+        white_side,
+    )
     chessboard.draw_board()
     chessboard.draw_pieces()
     chessboard.setup_buttons()
     chessboard.turn_off_buttons()
     chessboard.set_start_time(white_start_time, black_start_time)
     chessboard.setup_text(white_name, black_name)
+    check = False
 
 
 def one_round(current_player, pc, tot_elapsed_time):
@@ -59,9 +68,7 @@ def one_round(current_player, pc, tot_elapsed_time):
         if piece_selected:
             if chessboard.check_spot(i, j, possible_moves):
                 move_spot = True
-        if chessboard.check_which_button_clicked(x, y, current_player)[
-            0
-        ]:  # can only do rochade on the others turn, change the other her to current and fix bug
+        if chessboard.check_which_button_clicked(x, y, current_player)[0]:
             move_spot = True
             rochade = True
             if chessboard.settings_button_clicked:
@@ -76,50 +83,60 @@ def one_round(current_player, pc, tot_elapsed_time):
 
 
 def end_of_round(piece, current_player, piece_index, i, j):
-    global chessboard
+    global chessboard, output_message, check
     other_player = chessboard.get_other_player(current_player)
     chessboard.turn_off_buttons()
     chessboard.turn_on_buttons()
+    chessboard.undraw_check_text()
+
     if piece != True:
         _ = chessboard.remove_piece(other_player, i, j, True)
         if piece == "bonde":
             chessboard.queening_the_pawn(current_player, piece_index, i, j)
 
     game_running = True
-    global output_message
     if chessboard.get_time_is_up():
-        print("time is up")
-        output_message = f"Time is up, {other_player} wins!"
+        output_message = {
+            other_player: f"Time is up\nGood job {other_player}\nYou win!",
+            current_player: f"Time is up\nNice try {current_player}\nYou lost",
+        }
         game_running = False
     if chessboard.check_mate(other_player):
-        print(current_player, "wins!!")
-        output_message = f"{current_player} wins!"
+        output_message = {
+            current_player: f"Check mate,\nGood job {current_player}\nYou win!",
+            other_player: f"Check mate\nNice try {other_player}\nYou lost",
+        }
         game_running = False
     elif chessboard.equal(other_player):
         print("equal!")
-        output_message = "Equal, good job both of you"
+        output_message = {
+            current_player: "Equal,\nGood job {current_player}",
+            other_player: "Equal\nGood job {other_player}",
+        }
         game_running = False
     elif chessboard.check(other_player):
         print("schack")
+        chessboard.set_check_text(other_player)
 
     return other_player, game_running
 
 
 def main():
+    global white_name, black_name
     game_running = True
     tot_elapsed_time = [0, 0]
-    current_player = "white"
+
     if input_dialog.interact() == "Start":
         print("setting up game")
-
         _setup_game()
+        current_player = white_name
         while game_running:
             [piece, piece_index, i, j] = one_round(current_player, pc, tot_elapsed_time)
             current_player, game_running = end_of_round(
                 piece, current_player, piece_index, i, j
             )
             print("tot_elapsed_time", tot_elapsed_time)
-        chessboard.set_winners_text(output_message)
+        chessboard.set_winners_text(output_message, white_name, black_name)
         sleep(1000)
 
 

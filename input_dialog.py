@@ -26,13 +26,13 @@ class InputDialog:
         self.black_name = Entry(Point(7, 4), 10).draw(win)
         self.black_name.setText("Black")
 
-        # Text(Point(1, 3), "Wind").draw(win)
-        # self.height = Text(Point(3, 3), 5).draw(win)
-        # self.height.setText("{0:.2f}".format(10))
+        Text(Point(3, 5), "Whites position (left/down)").draw(win)
+        self.white_position = Entry(Point(7, 5), 10).draw(win)
+        self.white_position.setText("left")
 
-        self.start = Button(win, Point(3.5, 5), 1.25, 0.5, "Start")
+        self.start = Button(win, Point(3.5, 8), 1.25, 0.5, "Start")
         self.start.activate()
-        self.quit = Button(win, Point(7, 5), 1.25, 0.5, "Quit")
+        self.quit = Button(win, Point(7, 8), 1.25, 0.5, "Quit")
         self.quit.activate()
 
     """ Runs a loop until the user presses either the quit or fire button """
@@ -57,6 +57,10 @@ class InputDialog:
         b = self.black_name.getText()
 
         return w, b
+
+    def get_sides(self):
+        w = self.white_position.getText()
+        return w
 
     def close(self):
         self.win.close()
