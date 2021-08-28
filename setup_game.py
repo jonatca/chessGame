@@ -26,7 +26,7 @@ class Setup_game:
             self.num_squares * self.sqsize,
         )
         self.win.setBackground("lightblue")
-        self.pieces_info = pieces(white_name, black_name)
+        self.pieces_info = pieces(white_name, black_name, white_position)
         self.possible_moves = []
         self.black_kingside_button_on = True
         self.white_kingside_button_on = True
@@ -427,8 +427,12 @@ class Setup_game:
         for i_add, j_add in add_move_list:
             for steps in range(rekursive):
                 steps = steps + 1
-                temp_i = i + i_add * steps * dir
-                temp_j = j + j_add * steps
+                if self.white_position != "down":
+                    temp_i = i + i_add * steps * dir
+                    temp_j = j + j_add * steps
+                else:
+                    temp_i = i + i_add * steps
+                    temp_j = j + j_add * steps * dir
                 temp_move = (temp_i, temp_j)
                 bre, temp_move = check_one_posibility(
                     self,
@@ -530,6 +534,8 @@ class Setup_game:
         self, piece: str, current_player: str, piece_index: int, i: int, j: int
     ):
         i_pre, j_pre = self.pieces_info[piece][current_player][piece_index]["pos"]
+        # i_pre, j_pre = convert_to_pos(self.white_position, i_pre, j_pre)
+        # i, j = convert_to_pos(self.white_position, i, j)
         self.pieces_info[piece][current_player][piece_index]["pos"] = (i, j)
 
         graphic_piece = self.pieces_info[piece][current_player][piece_index]["pic"]
@@ -544,6 +550,7 @@ class Setup_game:
         list_circles = []
         radius = self.sqsize / 8
         for i, j in possible_moves:
+            # i, j = convert_to_pos(self.white_position, i, j)
             x = convert_to_px(i + self.extra_side_space, self.sqsize)
             y = convert_to_px(j, self.sqsize)
             circle = Circle(Point(x, y), radius)
@@ -680,7 +687,6 @@ class Setup_game:
             self.num_squares + 3 / 2 * self.extra_side_space,
         ]
         color = [player1, player2]
-        print(color)
         for m in range(len(output_message)):
             if color[m] != None:
                 temp_text = Text(
@@ -693,7 +699,6 @@ class Setup_game:
                 temp_text.setSize(19)
                 temp_text.setTextColor("black")
                 temp_text.draw(self.win)
-        print(output_message)
 
     def set_check_text(self, player):
         index = 0

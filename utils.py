@@ -9,16 +9,39 @@ def convert_to_px(i: int, sqsize: int) -> int:
 def convert_to_i_j(chessboard, x: float, y: float) -> int:
     j = int(y / chessboard.sqsize + 1)
     i = int(x / chessboard.sqsize + 1 - chessboard.extra_side_space)
+    # i, j = convert_to_pos(chessboard.white_position, i, j)
     return i, j
 
 
 def convert_to_pos(white_position, i, j):
     if white_position == "down":
-        pass
-    return 9 - j, 9 - i
+        i, j = 9 - j, 9 - i
+    return i, j
 
 
-def pieces(white_name, black_name):
+def convert_pieces_to_pos(white_position, pieces_info):
+    piece_info_copy = pieces_info.copy()
+    for piece in pieces_info:
+        for player in pieces_info[piece]:
+            if player != "rules":
+                for piece_index in pieces_info[piece][player]:
+                    print(pieces_info[piece][player][piece_index])
+                    i, j = pieces_info[piece][player][piece_index]["pos"]
+                    piece_info_copy[piece][player][piece_index]["pos"] = convert_to_pos(
+                        white_position, i, j
+                    )
+
+    piece_info_copy["bonde"]["rules"]["standard_move"] = [
+        convert_to_pos(white_position, 1, 0)
+    ]
+    piece_info_copy["bonde"]["rules"]["attack_move"] = [
+        convert_to_pos(white_position, 1, 1),
+        convert_to_pos(white_position, 1, -1),
+    ]
+    return piece_info_copy
+
+
+def pieces(white_name, black_name, white_position):
     torn_movement = [(1, 0), (-1, 0), (0, 1), (0, -1)]  # (i,j), i=x=right
     lopare_movement = [(1, 1), (-1, -1), (1, -1), (-1, 1)]
 
@@ -118,12 +141,20 @@ def pieces(white_name, black_name):
             },
         },
     }
+    if white_position == "down":
+        pieces_info = convert_pieces_to_pos(white_position, pieces_info)
     return pieces_info
 
 
 def bonde_attack(Setup_game, other_player: str, i: int, j: int, dir: int) -> list:
+
     possible_moves = []
-    attack_position = [(i + dir, j + 1), (i + dir, j - 1)]
+    attack_position_temp = [(i + dir, j + 1), (i + dir, j - 1)]
+    attack_position = []
+    for i, j in attack_position_temp:
+        i, j = convert_to_pos(Setup_game.white_position, i, j)
+        attack_position.append((i, j))
+
     for m in range(len(attack_position)):
         temp_piece, temp_piece_index = Setup_game.exist_piece_here(
             other_player, attack_position[m][0], attack_position[m][1]
@@ -157,7 +188,7 @@ def king_is_check(
 
 
 def bol_exist_piece_here(Setup_game, check_player: str, i: int, j: int):
-    piece, piece_index = Setup_game.exist_piece_here(check_player, i, j)
+    piece, _ = Setup_game.exist_piece_here(check_player, i, j)
     if piece == None:
         return False
     return True
@@ -197,7 +228,6 @@ def calc_time_past(index, elapsed_time, tot_elapsed_time) -> list:
 
 def get_time_formated(num_secounds):
     formatted_time = str(datetime.timedelta(seconds=num_secounds))
-    # print(len(formatted_time), "längd")
     if len(formatted_time) == 14:
         formatted_time = formatted_time[:-5]
     return formatted_time

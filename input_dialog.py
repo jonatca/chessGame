@@ -28,7 +28,7 @@ class InputDialog:
 
         Text(Point(3, 5), "Whites position (left/down)").draw(win)
         self.white_position = Entry(Point(7, 5), 10).draw(win)
-        self.white_position.setText("left")
+        self.white_position.setText("down")
 
         self.start = Button(win, Point(3.5, 8), 1.25, 0.5, "Start")
         self.start.activate()
