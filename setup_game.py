@@ -595,7 +595,6 @@ class Setup_game:
             self.num_squares + 3 / 2 * self.extra_side_space,
         ]
         color = [self.white_name, self.black_name]
-        print(color)
         for m in range(len(output_message)):
             if color[m] != None:
                 temp_text = Text(
@@ -608,7 +607,6 @@ class Setup_game:
                 temp_text.setSize(19)
                 temp_text.setTextColor("black")
                 temp_text.draw(self.win)
-        print(output_message)
 
     def set_check_text(self, player: str):
         index = 0

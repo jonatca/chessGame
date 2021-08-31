@@ -192,7 +192,6 @@ def calc_time_past(index: int, elapsed_time: int, tot_elapsed_time: List) -> Lis
 
 def get_time_formated(num_secounds: int) -> str:
     formatted_time = str(datetime.timedelta(seconds=num_secounds))
-    # print(len(formatted_time), "längd")
     if len(formatted_time) == 14:
         formatted_time = formatted_time[:-5]
     return formatted_time

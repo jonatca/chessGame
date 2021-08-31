@@ -319,7 +319,6 @@ class GraphWin(tk.Canvas):
         while self.mouseX == None or self.mouseY == None:
             if pc != None:
                 stop = pc()
-                print("stop", stop)
                 chessboard.output_time_left(stop, tot_elapsed_time, current_player)
             self.update()
             if self.isClosed():
